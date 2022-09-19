@@ -1,8 +1,9 @@
-package com.homework.horse_racing
+package com.homework.horse_racing.view
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
+import com.homework.horse_racing.R
 
 class MainActivity : AppCompatActivity() {
     companion object {
