@@ -5,6 +5,8 @@ import com.google.gson.JsonObject
 import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import okhttp3.OkHttpClient
+import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
@@ -13,27 +15,30 @@ object AppClientManager {
 
     const val DoMain: String = "https://tw.rter.info"
 
-    private val apiService: ApiService
+    private val exchangeRateApi: ExchangeRateApiService
 
     init {
-//        val loggingInterceptor: HttpLoggingInterceptor =
-//            HttpLoggingInterceptor().apply {
-//                setLevel(HttpLoggingInterceptor.Level.BODY)
-//            }
-//        val okHttpClient = OkHttpClient.Builder().addInterceptor(loggingInterceptor).build()
+        // HttpLoggingInterceptor is use to record networking in logcat
+        val loggingInterceptor: HttpLoggingInterceptor =
+            HttpLoggingInterceptor().apply {
+                setLevel(HttpLoggingInterceptor.Level.BODY)
+            }
+        // cause retrofit hasn't logcat networking function, so use okhttp implement it.
+        val okHttpClient: OkHttpClient = OkHttpClient.Builder()
+            .addInterceptor(loggingInterceptor)
+            .build()
 
-        val retrofit = Retrofit.Builder()
+        val retrofit: Retrofit = Retrofit.Builder()
             .baseUrl(DoMain)
             .addConverterFactory(GsonConverterFactory.create())
-//            .client(okHttpClient)
+            .client(okHttpClient) // add okHttpClient to implement networking record in logcat.
             .build()
-        apiService = retrofit.create(ApiService::class.java)
+        exchangeRateApi = retrofit.create(ExchangeRateApiService::class.java)
     }
-
 
     suspend fun queryExchangeRate(): Result<JsonObject> {
         return kotlin.runCatching {
-            val response = apiService.queryExchangeRate()
+            val response = exchangeRateApi.queryExchangeRate()
 
             if (response.isSuccessful) {
                 return@runCatching response.body()!!

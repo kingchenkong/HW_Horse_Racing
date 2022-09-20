@@ -32,7 +32,6 @@ class MainActivity : AppCompatActivity() {
     private fun queryExchangeRate() {
         lifecycleScope.launchWhenStarted {
             val response = AppClientManager.queryExchangeRate()
-            Log.d(TAG, "queryExchangeRate: response: $response")
             val gson = Gson()
             when {
                 response.isSuccess -> {
