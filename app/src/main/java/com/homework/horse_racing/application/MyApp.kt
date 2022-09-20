@@ -22,6 +22,10 @@ class MyApp : MultiDexApplication() {
 
         applicationScope.launch {
             initDatabase()
+
+//            TestPlayerDao.testPlayDao()
+//            TestHorseDao.testHorseDao()
+//            TestHistoryDao.testHistoryDao()
         }
     }
 
