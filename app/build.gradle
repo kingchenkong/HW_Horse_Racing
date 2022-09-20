@@ -31,6 +31,10 @@ android {
     kotlinOptions {
         jvmTarget = '1.8'
     }
+    buildFeatures {
+        viewBinding true
+        dataBinding true
+    }
 }
 
 dependencies {
@@ -49,7 +53,7 @@ dependencies {
     implementation('androidx.multidex:multidex:2.0.1')
 
     // Google
-    implementation("com.google.code.gson:gson:2.8.9")
+    implementation('com.google.code.gson:gson:2.9.1')
 
     // Life cycle
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.5.1")
@@ -65,7 +69,7 @@ dependencies {
     implementation('com.squareup.okhttp3:okhttp:5.0.0-alpha.10')
     implementation("com.squareup.okhttp3:logging-interceptor:4.10.0")
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
-    implementation("com.squareup.retrofit2:converter-gson:2.6.0")
+    implementation('com.squareup.retrofit2:converter-gson:2.9.0')
 //    implementation 'com.squareup.retrofit2:adapter-rxjava3:2.9.0'
 
     // RxJava
