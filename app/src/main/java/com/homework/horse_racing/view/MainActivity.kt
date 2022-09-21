@@ -5,6 +5,8 @@ import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
 import com.homework.horse_racing.databinding.ActivityMainBinding
+import com.homework.horse_racing.model.bean.HorseNumber
+import com.homework.horse_racing.model.manager.BetHorseManager
 import com.homework.horse_racing.view_model.ExchangeApiViewModel
 import com.homework.horse_racing.view_model.ui.MainActivityViewModel
 
@@ -17,6 +19,8 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var uiVm: MainActivityViewModel
     private lateinit var apiVm: ExchangeApiViewModel
+
+    private var manager: BetHorseManager = BetHorseManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -32,6 +36,7 @@ class MainActivity : AppCompatActivity() {
         binding.apiVm = apiVm
 
         initUiObserver()
+        initManagerObserver()
         initApiObserver()
 
         uiAction()
@@ -41,18 +46,59 @@ class MainActivity : AppCompatActivity() {
         super.onStart()
         Log.d(TAG, "onStart: ")
 
-        initView()
+        manager.initialize()
+        uiVm.initView()
 
-        uiVm.updateExchangeRate(-1.0)
-        apiVm.queryExchangeRate()
-    }
-
-    private fun initView() {
-        uiVm.updateExchangeRate(0.0)
-
+        getExchangeRateByApi()
     }
 
     private fun initUiObserver() {
+        uiVm.betAmountText.observe(this) {
+            Log.d(TAG, "initUiObserver: betAmountText: $it")
+            val betAmountUSD: Double = when {
+                it.isBlank() -> 0.0
+                else -> it.toDouble()
+            }
+            manager.usdBetAmountLiveData.postValue(betAmountUSD)
+        }
+
+    }
+
+    private fun initManagerObserver() {
+        manager.horseOdds1LiveData.observe(this) {
+            uiVm.oddsHorse1Text.postValue(it.toString())
+        }
+        manager.horseOdds2LiveData.observe(this) {
+            uiVm.oddsHorse2Text.postValue(it.toString())
+        }
+        manager.horseOdds3LiveData.observe(this) {
+            uiVm.oddsHorse3Text.postValue(it.toString())
+        }
+        manager.horseOdds4LiveData.observe(this) {
+            uiVm.oddsHorse4Text.postValue(it.toString())
+        }
+        manager.focusHorseNumberLiveData.observe(this) {
+            Log.d(TAG, "initUiObserver: manager.focusHorseNumber: ${it.id}")
+            uiVm.updateFocusNumberText(it.horseName)
+
+            manager.calculateAward()
+        }
+        manager.usdBetAmountLiveData.observe(this) {
+            manager.calculateTWDBetAmount()
+            manager.calculateAward()
+        }
+
+        manager.twdBetAmountLiveData.observe(this) {
+            Log.d(TAG, "initManagerObserver: twdBetAmountLiveData: $it ")
+            uiVm.updateBetAmountToTWD(it)
+        }
+
+        manager.usdAwardLiveData.observe(this) {
+            uiVm.updateAwardUSDText(it)
+        }
+        manager.twdAwardLiveData.observe(this) {
+            uiVm.updateAwardTWDText(it)
+        }
 
     }
 
@@ -61,8 +107,8 @@ class MainActivity : AppCompatActivity() {
             Log.d(TAG, "initObserver: exchangeRateLiveData: $it")
             uiVm.updateExchangeRate(it.Exrate)
             uiVm.updateTime(it.UTC)
+            manager.nowExchangeRateLiveData.postValue(it.Exrate)
         }
-
     }
 
     private fun uiAction() {
@@ -71,7 +117,29 @@ class MainActivity : AppCompatActivity() {
                 Log.d(TAG, "uiAction: btnApi: onClick: ")
                 apiVm!!.queryExchangeRate()
             }
+            btnHorse1.setOnClickListener {
+                manager.focusHorseNumberLiveData.postValue(HorseNumber.NUM_1)
+            }
+            btnHorse2.setOnClickListener {
+                manager.focusHorseNumberLiveData.postValue(HorseNumber.NUM_2)
+            }
+            btnHorse3.setOnClickListener {
+                manager.focusHorseNumberLiveData.postValue(HorseNumber.NUM_3)
+            }
+            btnHorse4.setOnClickListener {
+                manager.focusHorseNumberLiveData.postValue(HorseNumber.NUM_4)
+            }
+            btnBet.setOnClickListener {
+                Log.d(TAG, "uiAction: btnBet:")
+                //TODO: 下注 馬開跑
+
+            }
         }
+    }
+
+    private fun getExchangeRateByApi() {
+        uiVm.updateExchangeRate(-1.0)
+        apiVm.queryExchangeRate()
     }
 
 
