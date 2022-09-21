@@ -6,10 +6,10 @@
     </item>
     <item
         android:id="@android:id/secondaryProgress"
-        android:drawable="#888888">
+        android:drawable="@color/horse_4">
     </item>
     <item
         android:id="@android:id/progress"
-        android:drawable="#888888">
+        android:drawable="@color/horse_4">
     </item>
 </layer-list>
