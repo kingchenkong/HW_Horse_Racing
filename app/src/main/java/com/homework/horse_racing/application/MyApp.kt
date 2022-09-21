@@ -1,5 +1,6 @@
 package com.homework.horse_racing.application
 
+import android.util.Log
 import androidx.multidex.MultiDexApplication
 import com.homework.horse_racing.model.database.AppDatabase
 import kotlinx.coroutines.CoroutineScope
@@ -21,11 +22,9 @@ class MyApp : MultiDexApplication() {
         super.onCreate()
 
         applicationScope.launch {
+            Log.d(TAG, "onCreate: ")
             initDatabase()
 
-//            TestPlayerDao.testPlayDao()
-//            TestHorseDao.testHorseDao()
-//            TestHistoryDao.testHistoryDao()
         }
     }
 
