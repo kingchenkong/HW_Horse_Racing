@@ -37,7 +37,7 @@
             android:id="@+id/tv_exchange_title"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
+            android:layout_marginTop="10dp"
             android:text="美金匯率: "
             android:textColor="@android:color/black"
             android:textSize="14dp"
@@ -453,6 +453,72 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/cl_award" />
+
+        <LinearLayout
+            android:id="@+id/ll_race"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:orientation="vertical"
+            app:layout_constraintEnd_toEndOf="@id/gl_end_edge"
+            app:layout_constraintStart_toStartOf="@id/gl_start_edge"
+            app:layout_constraintTop_toBottomOf="@id/btn_bet">
+
+            <ProgressBar
+                android:id="@+id/pb_horse_1"
+                style="@android:style/Widget.ProgressBar.Horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:progressDrawable="@drawable/progress_bar_horse_1" />
+
+            <ProgressBar
+                android:id="@+id/pb_horse_2"
+                style="@android:style/Widget.ProgressBar.Horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:progressDrawable="@drawable/progress_bar_horse_2" />
+
+            <ProgressBar
+                android:id="@+id/pb_horse_3"
+                style="@android:style/Widget.ProgressBar.Horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:progressDrawable="@drawable/progress_bar_horse_3" />
+
+            <ProgressBar
+                android:id="@+id/pb_horse_4"
+                style="@android:style/Widget.ProgressBar.Horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:progressDrawable="@drawable/progress_bar_horse_4" />
+        </LinearLayout>
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/cl_result"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="@id/gl_end_edge"
+            app:layout_constraintStart_toStartOf="@id/gl_start_edge"
+            app:layout_constraintTop_toBottomOf="@id/ll_race">
+
+            <TextView
+                android:id="@+id/tv_result"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="誰贏了??"
+                android:textColor="@android:color/black"
+                android:textSize="20dp"
+                android:textStyle="bold"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+        </androidx.constraintlayout.widget.ConstraintLayout>
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>
