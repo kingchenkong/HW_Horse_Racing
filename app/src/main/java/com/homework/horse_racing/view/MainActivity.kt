@@ -2,9 +2,11 @@ package com.homework.horse_racing.view
 
 import android.icu.text.SimpleDateFormat
 import android.os.Bundle
+import android.text.InputType
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
 import com.homework.horse_racing.databinding.ActivityMainBinding
 import com.homework.horse_racing.model.bean.HorseNumber
 import com.homework.horse_racing.model.bean.RaceProgress
@@ -66,6 +68,11 @@ class MainActivity : AppCompatActivity() {
             Log.d(TAG, "betAmountText: $it")
             val betAmountUSD: Double = when {
                 it.isBlank() -> 0.0
+                BetHorseManager.checkBetAmountIsInValid(it.toDouble()) -> {
+                    Log.d(TAG, "[Bet] 我們沒有賭那麼大啦!! ")
+                    uiVm.betAmountText.postValue("")
+                    0.0
+                }
                 else -> it.toDouble()
             }
             manager.usdBetAmountLiveData.postValue(betAmountUSD)
@@ -112,12 +119,10 @@ class MainActivity : AppCompatActivity() {
             manager.calculateTWDBetAmount()
             manager.calculateAward()
         }
-
         manager.twdBetAmountLiveData.observe(this) {
             Log.d(TAG, "twdBetAmountLiveData: $it ")
             uiVm.updateBetAmountToTWD(it)
         }
-
         manager.usdAwardLiveData.observe(this) {
             uiVm.updateAwardUSDText(it)
         }
@@ -128,16 +133,26 @@ class MainActivity : AppCompatActivity() {
             val sdf = SimpleDateFormat("yyyy-MM-dd hh:mm:ss.ssS", Locale.TAIWAN)
             Log.d(TAG, "[Race] 賽事結束時間: ${sdf.format(it)})")
             BetHorseManager.oddsStatistics()
-        }
+            // TODO: 報喜?嘲諷?
 
+            // 更新獎金
+            BetHorseManager.calculateAward()
+            // enable all btn and input
+            enableAllBtnAndInput()
+        }
     }
 
     private fun initApiObserver() {
         apiVm.exchangeApiLiveData.observe(this) {
-            Log.d(TAG, "initObserver: exchangeRateLiveData: $it")
-            uiVm.updateExchangeRate(it.Exrate)
-            uiVm.updateTime(it.UTC)
-            manager.nowExchangeRateLiveData.postValue(it.Exrate)
+            lifecycleScope.launchWhenStarted {
+                Log.d(TAG, "initObserver: exchangeRateLiveData: $it")
+                uiVm.updateExchangeRate(it.Exrate)
+                uiVm.updateTime(it.UTC)
+                manager.nowExchangeRateLiveData.postValue(it.Exrate)
+
+                BetHorseManager.calculateTWDBetAmount()
+                BetHorseManager.calculateAward()
+            }
         }
     }
 
@@ -160,12 +175,59 @@ class MainActivity : AppCompatActivity() {
                 manager.focusHorseNumberLiveData.postValue(HorseNumber.NUM_4)
             }
             btnBet.setOnClickListener {
-                Log.d(TAG, "uiAction: btnBet:")
-                // init 賽道
-                initRace()
-                // 下注 馬開跑
-                uiVm?.startRace()
+                Log.d(TAG, "[Bet] btnBet:")
+
+                when {
+                    uiVm!!.remainAmountIsInvalid() -> {
+                        Log.e(TAG, "[Bet] btnBet: 喔ㄟ! 你沒錢啦!!")
+                    }
+                    uiVm!!.betAmountIsInvalid() -> {
+                        Log.e(TAG, "[Bet] btnBet: 賭金啦! 先下注好嗎?")
+                    }
+                    uiVm!!.diffAmountIsInvalid() -> {
+                        Log.e(TAG, "[Bet] btnBet: 肖欸heo!? 沒那個咖噌不要吃那個瀉藥 =.=凸")
+                    }
+                    uiVm!!.focusNumberNotFound() -> {
+                        Log.e(TAG, "[Bet] btnBet: 馬啦! 你的馬咧?")
+                    }
+                    else -> {
+                        Log.d(TAG, "[Bet] btnBet: GO!")
+
+                        // disable all btn, and input
+                        disableAllBtnAndInput()
+                        // init 賽道
+                        initRace()
+                        // 扣錢
+                        uiVm!!.deductRemainAmount()
+                        // 下注 馬開跑
+                        uiVm!!.startRace()
+                    }
+                }
             }
+        }
+    }
+
+    private fun disableAllBtnAndInput() {
+        binding.apply {
+            edtBetAmount.inputType = InputType.TYPE_NULL
+            btnApi.isEnabled = false
+            btnBet.isEnabled = false
+            btnHorse1.isEnabled = false
+            btnHorse2.isEnabled = false
+            btnHorse3.isEnabled = false
+            btnHorse4.isEnabled = false
+        }
+    }
+
+    private fun enableAllBtnAndInput() {
+        binding.apply {
+            edtBetAmount.inputType = InputType.TYPE_NUMBER_FLAG_DECIMAL
+            btnApi.isEnabled = true
+            btnBet.isEnabled = true
+            btnHorse1.isEnabled = true
+            btnHorse2.isEnabled = true
+            btnHorse3.isEnabled = true
+            btnHorse4.isEnabled = true
         }
     }
 

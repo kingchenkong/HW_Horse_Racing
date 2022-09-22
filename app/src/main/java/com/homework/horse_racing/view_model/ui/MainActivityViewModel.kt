@@ -5,10 +5,10 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.homework.horse_racing.model.bean.HorseNumber
 import com.homework.horse_racing.model.bean.MyTimer
 import com.homework.horse_racing.model.bean.RaceProgress
 import com.homework.horse_racing.model.manager.BetHorseManager
-import com.homework.horse_racing.view.MainActivity
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
@@ -27,7 +27,7 @@ class MainActivityViewModel : ViewModel() {
         viewModelScope.launch {
             _exchangeRateText.postValue(exchangeRateToText(0.0))
             _timeText.postValue("- - -")
-            _remainAmountText.postValue(BetHorseManager.INITIAL_AMOUNT.toString())
+            _remainAmountText.postValue(BetHorseManager.INIT_REMAIN.toString())
             oddsHorse1Text.postValue(BetHorseManager.INIT_ODDS.toString())
             oddsHorse2Text.postValue(BetHorseManager.INIT_ODDS.toString())
             oddsHorse3Text.postValue(BetHorseManager.INIT_ODDS.toString())
@@ -138,6 +138,10 @@ class MainActivityViewModel : ViewModel() {
         _awardTWDText.postValue(award.toString())
     }
 
+    // 結果: 本期贏家
+    private val _resultTextLiveData: MutableLiveData<String> = MutableLiveData<String>()
+    val resultTextLiveData: LiveData<String> = _resultTextLiveData
+
     //endregion
 
     //region LiveData: Input
@@ -161,14 +165,60 @@ class MainActivityViewModel : ViewModel() {
         raceTimer.stopTimer()
     }
 
+    // 扣除 賭金
+    fun deductRemainAmount() {
+        val newRemainAmount: Int =
+            BetHorseManager.twdRemainAmountLiveData.value!! - BetHorseManager.twdBetAmountLiveData.value!!
+        BetHorseManager.twdRemainAmountLiveData.postValue(newRemainAmount)
+        _remainAmountText.postValue(newRemainAmount.toString())
+    }
+
     fun processAfterGoal(raceProgress: RaceProgress) {
         stopRace()
-        raceProgress.goalHorseNumberList.forEach { horseNumber ->
-            Log.e(TAG, "[Race] winner is: ${horseNumber.horseName}")
-        }
+
+        outputTvResult(raceProgress.goalHorseNumberList)
+
         RaceProgress.checkLoser(raceProgress)
+
+        // 有贏嗎?
+        if (BetHorseManager.checkIsWin(raceProgress)) {
+            val award: Int = BetHorseManager.takeAward()
+            _remainAmountText.postValue(award.toString())
+        }
         // 完賽後處理
         BetHorseManager.processAfterGoal(raceProgress)
+    }
+
+    private fun outputTvResult(winnerList: MutableList<HorseNumber>) {
+        val stringBuilder = StringBuilder()
+        winnerList.forEach { horseNumber ->
+            Log.e(TAG, "[Race] winner is: ${horseNumber.horseName}")
+            stringBuilder.append(horseNumber.horseName).append(" ")
+        }
+        stringBuilder.append("贏了!!")
+        _resultTextLiveData.postValue(stringBuilder.toString())
+    }
+
+    fun remainAmountIsInvalid(): Boolean { // 賭金 TWD <= 0
+        return BetHorseManager.twdRemainAmountLiveData.value!! <= 0
+    }
+
+    fun betAmountIsInvalid(): Boolean { // 下注金 TWD <= 0
+        return BetHorseManager.twdBetAmountLiveData.value!! <= 0
+    }
+
+    fun diffAmountIsInvalid(): Boolean { // 賭金 < 下注金
+        return BetHorseManager.twdRemainAmountLiveData.value!! < BetHorseManager.twdBetAmountLiveData.value!!
+    }
+
+    fun focusNumberNotFound(): Boolean { // 沒選馬
+        return BetHorseManager.focusHorseNumberLiveData.value!! == HorseNumber.NUM_CLEAR
+    }
+
+    fun betProcessALLOK(): Boolean {
+        val invalid =
+            remainAmountIsInvalid() || betAmountIsInvalid() || diffAmountIsInvalid() || focusNumberNotFound()
+        return !invalid // is all OK
     }
 
 }

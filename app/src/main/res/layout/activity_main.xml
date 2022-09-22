@@ -177,7 +177,8 @@
                         android:layout_weight="2"
                         android:digits="0123456789."
                         android:hint="美金數量"
-                        android:inputType="text"
+                        android:inputType="numberDecimal"
+                        android:maxLength="4"
                         android:text="@={uiVm.betAmountText}"
                         android:textColor="@android:color/holo_blue_dark"
                         android:textSize="20dp" />
@@ -522,7 +523,7 @@
                 android:id="@+id/tv_result"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="誰贏了??"
+                android:text="@{uiVm.resultTextLiveData}"
                 android:textColor="@android:color/black"
                 android:textSize="20dp"
                 android:textStyle="bold"
@@ -531,6 +532,5 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
         </androidx.constraintlayout.widget.ConstraintLayout>
-
     </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>

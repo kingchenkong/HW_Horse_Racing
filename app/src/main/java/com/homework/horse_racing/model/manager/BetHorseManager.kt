@@ -9,23 +9,28 @@ import kotlin.math.roundToInt
 object BetHorseManager {
     private val TAG: String = BetHorseManager::class.java.simpleName
 
-    const val INITIAL_AMOUNT: Int = 10000
+    const val INIT_REMAIN: Int = 10000
     const val INIT_ODDS: Double = 2.0
     const val MAX_ODDS: Double = 5.0
     const val MIN_ODDS: Double = 2.0
-    const val ODDS_WIN_DIFF: Double = 0.1
-    const val ODDS_LOSS_DIFF: Double = -0.1
+    const val ODDS_WIN_DIFF: Double = -0.1
+    const val ODDS_LOSS_DIFF: Double = 0.1
+
+    const val BET_MAX_USD: Double = 10.0
 
     // 匯率時價
-    var nowExchangeRateLiveData: MutableLiveData<Double> = MutableLiveData<Double>()// 0.0
+    val nowExchangeRateLiveData: MutableLiveData<Double> = MutableLiveData<Double>()// 0.0
+
+    // 剩餘賭金
+    val twdRemainAmountLiveData: MutableLiveData<Int> = MutableLiveData<Int>() // 10000
 
     // 賠率
-    var horseOdds1LiveData: MutableLiveData<Double> = MutableLiveData<Double>() // INIT_ODDS
-    var horseOdds2LiveData: MutableLiveData<Double> = MutableLiveData<Double>() // INIT_ODDS + 2
-    var horseOdds3LiveData: MutableLiveData<Double> = MutableLiveData<Double>() // INIT_ODDS + 3
-    var horseOdds4LiveData: MutableLiveData<Double> = MutableLiveData<Double>() // INIT_ODDS + 2.5
+    val horseOdds1LiveData: MutableLiveData<Double> = MutableLiveData<Double>() // INIT_ODDS
+    val horseOdds2LiveData: MutableLiveData<Double> = MutableLiveData<Double>() // INIT_ODDS + 2
+    val horseOdds3LiveData: MutableLiveData<Double> = MutableLiveData<Double>() // INIT_ODDS + 3
+    val horseOdds4LiveData: MutableLiveData<Double> = MutableLiveData<Double>() // INIT_ODDS + 2.5
 
-    var nowOddsLiveData: MutableLiveData<Double> = MutableLiveData<Double>() // 0.0
+    val nowOddsLiveData: MutableLiveData<Double> = MutableLiveData<Double>() // 0.0
 
     // 下注哪隻馬 (號碼)
     val focusHorseNumberLiveData: MutableLiveData<HorseNumber> = MutableLiveData<HorseNumber>()
@@ -39,10 +44,11 @@ object BetHorseManager {
     val twdAwardLiveData: MutableLiveData<Int> = MutableLiveData<Int>()
 
     // 處理結束 timestamp
-    val processEndTimeStampLiveData:MutableLiveData<Long> = MutableLiveData<Long>()
+    val processEndTimeStampLiveData: MutableLiveData<Long> = MutableLiveData<Long>()
 
     fun initialize() {
         nowExchangeRateLiveData.postValue(0.0)
+        twdRemainAmountLiveData.postValue(INIT_REMAIN)
         focusHorseNumberLiveData.postValue(HorseNumber.NUM_CLEAR)
         horseOdds1LiveData.postValue(INIT_ODDS)
         horseOdds2LiveData.postValue(INIT_ODDS)
@@ -93,6 +99,24 @@ object BetHorseManager {
 
         // post 處理完畢 timestamp
         processEndTimeStampLiveData.postValue(System.currentTimeMillis())
+    }
+
+    // 贏了 拿錢
+    fun takeAward(): Int {
+        Log.d(TAG, "[Award] 取得獎金: ${twdAwardLiveData.value} ")
+        val newRemainAmount: Int = twdRemainAmountLiveData.value!! + twdAwardLiveData.value!!
+        twdRemainAmountLiveData.postValue(newRemainAmount)
+        return newRemainAmount
+    }
+
+    fun checkIsWin(raceProgress: RaceProgress): Boolean {
+        var isWin: Boolean = false
+        raceProgress.goalHorseNumberList.forEach {
+            if (focusHorseNumberLiveData.value!! == it) {
+                isWin = true
+            }
+        }
+        return isWin
     }
 
     // 賽後統計
@@ -170,6 +194,10 @@ object BetHorseManager {
             roundOdds < MIN_ODDS -> MIN_ODDS
             else -> roundOdds
         }
+    }
+
+    fun checkBetAmountIsInValid(usdBetAmount: Double): Boolean {
+        return usdBetAmount > BET_MAX_USD
     }
 
 }
