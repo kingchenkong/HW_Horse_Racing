@@ -11,13 +11,13 @@
 
         <variable
             name="apiVm"
-            type="com.homework.horse_racing.view_model.ExchangeApiViewModel" />
+            type="com.homework.horse_racing.view_model.api.ExchangeApiViewModel" />
     </data>
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        tools:context=".view.MainActivity">
+        tools:context=".view.activity.MainActivity">
 
         <androidx.constraintlayout.widget.Guideline
             android:id="@+id/gl_start_edge"

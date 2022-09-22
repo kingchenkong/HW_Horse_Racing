@@ -1,4 +1,4 @@
-package com.homework.horse_racing.view_model
+package com.homework.horse_racing.view_model.api
 
 import android.util.Log
 import androidx.lifecycle.LiveData

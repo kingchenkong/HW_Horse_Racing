@@ -5,9 +5,17 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.homework.horse_racing.application.MyApp
 import com.homework.horse_racing.model.bean.HorseNumber
 import com.homework.horse_racing.model.bean.MyTimer
 import com.homework.horse_racing.model.bean.RaceProgress
+import com.homework.horse_racing.model.bean.ResultState
+import com.homework.horse_racing.model.database.dao.HistoryDao
+import com.homework.horse_racing.model.database.dao.HorseDao
+import com.homework.horse_racing.model.database.dao.PlayerDao
+import com.homework.horse_racing.model.database.entity.HistoryEntity
+import com.homework.horse_racing.model.database.entity.HorseEntity
+import com.homework.horse_racing.model.database.entity.PlayerEntity
 import com.homework.horse_racing.model.manager.BetHorseManager
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
@@ -178,6 +186,7 @@ class MainActivityViewModel : ViewModel() {
 
         outputTvResult(raceProgress.goalHorseNumberList)
 
+        RaceProgress.checkNotGoalList(raceProgress)
         RaceProgress.checkLoser(raceProgress)
 
         // 有贏嗎?
@@ -185,6 +194,9 @@ class MainActivityViewModel : ViewModel() {
 
         // 完賽後處理
         BetHorseManager.processAfterGoal(raceProgress)
+
+        // insert result to db
+        insertResultToDb(raceProgress)
     }
 
     private fun resultUIProcess(raceProgress: RaceProgress) {
@@ -193,6 +205,64 @@ class MainActivityViewModel : ViewModel() {
             _remainAmountText.postValue(award.toString())
         }
     }
+
+    private fun insertResultToDb(raceProgress: RaceProgress) {
+        viewModelScope.launch {
+            updatePlayerEntity()
+            updateHorseEntity()
+            insertHistoryEntity(raceProgress)
+        }
+    }
+
+    private suspend fun updatePlayerEntity() {
+        val dao: PlayerDao = MyApp.appDatabase.getPlayerDao()
+        val entity: PlayerEntity = PlayerEntity(0, BetHorseManager.twdRemainAmountLiveData.value!!)
+        dao.update(entity)
+    }
+
+    private suspend fun updateHorseEntity() {
+        val dao: HorseDao = MyApp.appDatabase.getHorseDao()
+        val entityList: List<HorseEntity> = listOf(
+            HorseEntity(0, BetHorseManager.horseOdds1LiveData.value!!, HorseNumber.NUM_1.horseName),
+            HorseEntity(1, BetHorseManager.horseOdds2LiveData.value!!, HorseNumber.NUM_2.horseName),
+            HorseEntity(2, BetHorseManager.horseOdds3LiveData.value!!, HorseNumber.NUM_3.horseName),
+            HorseEntity(3, BetHorseManager.horseOdds4LiveData.value!!, HorseNumber.NUM_4.horseName),
+        )
+        entityList.forEach {
+            dao.update(it)
+        }
+    }
+
+    private suspend fun insertHistoryEntity(raceProgress: RaceProgress) {
+        val dao: HistoryDao = MyApp.appDatabase.getHistoryDao()
+        val resultState = BetHorseManager.resultState.value!!
+        val award: Int = when (resultState) {
+            ResultState.WIN -> {
+                BetHorseManager.twdAwardLiveData.value!!
+            }
+            else -> {
+                0
+            }
+        }
+
+        val horseDao: HorseDao = MyApp.appDatabase.getHorseDao()
+        val betHorseId: Int =
+            horseDao.getHorseByHorseName(BetHorseManager.focusHorseNumberLiveData.value!!.horseName).id
+        val winHorseId: Int =
+            horseDao.getHorseByHorseName(raceProgress.firstRace.horseNumber.horseName).id
+
+        val entity = HistoryEntity(
+            id = 0,
+            betAmount = BetHorseManager.twdBetAmountLiveData.value!!,
+            betHorseId = betHorseId,
+            winHorseId = winHorseId,
+            thisRoundAward = award,
+            playerAmountRemain = BetHorseManager.twdRemainAmountLiveData.value!!,
+            visible = true,
+        )
+        dao.insert(entity)
+    }
+
 
     private fun outputTvResult(winnerList: MutableList<HorseNumber>) {
         val stringBuilder = StringBuilder()

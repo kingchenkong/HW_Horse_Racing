@@ -10,7 +10,10 @@ class MyTimer(
     private var timer: Timer = Timer()
     var pastSec: Int = 0
     val raceProgress: RaceProgress = RaceProgress(
-        race1 = 0, race2 = 0, race3 = 0, race4 = 0
+        race1 = Race(0, HorseNumber.NUM_1),
+        race2 = Race(0, HorseNumber.NUM_2),
+        race3 = Race(0, HorseNumber.NUM_3),
+        race4 = Race(0, HorseNumber.NUM_4),
     )
 
     private val task: TimerTask = object : TimerTask() {

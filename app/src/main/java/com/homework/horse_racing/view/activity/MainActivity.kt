@@ -1,4 +1,4 @@
-package com.homework.horse_racing.view
+package com.homework.horse_racing.view.activity
 
 import android.icu.text.SimpleDateFormat
 import android.os.Bundle
@@ -14,7 +14,7 @@ import com.homework.horse_racing.model.bean.ResultState
 import com.homework.horse_racing.model.manager.BetHorseManager
 import com.homework.horse_racing.view.alert.BetErrorAlertDialog
 import com.homework.horse_racing.view.alert.ResultAlertDialog
-import com.homework.horse_racing.view_model.ExchangeApiViewModel
+import com.homework.horse_racing.view_model.api.ExchangeApiViewModel
 import com.homework.horse_racing.view_model.ui.MainActivityViewModel
 import java.util.*
 
@@ -76,11 +76,12 @@ class MainActivity : AppCompatActivity() {
         }
 
         uiVm.raceProgressLiveData.observe(this) {
-            binding.pbHorse1.progress = it.race1
-            binding.pbHorse2.progress = it.race2
-            binding.pbHorse3.progress = it.race3
-            binding.pbHorse4.progress = it.race4
+            binding.pbHorse1.progress = it.race1.progress
+            binding.pbHorse2.progress = it.race2.progress
+            binding.pbHorse3.progress = it.race3.progress
+            binding.pbHorse4.progress = it.race4.progress
 
+            RaceProgress.checkGoalList(it)
             RaceProgress.checkWinner(it)
             if (it.goalHorseNumberList.size > 0) {
                 uiVm.processAfterGoal(it)
