@@ -6,6 +6,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
 import com.homework.horse_racing.databinding.ActivityMainBinding
 import com.homework.horse_racing.model.bean.HorseNumber
+import com.homework.horse_racing.model.bean.RaceProgress
 import com.homework.horse_racing.model.manager.BetHorseManager
 import com.homework.horse_racing.view_model.ExchangeApiViewModel
 import com.homework.horse_racing.view_model.ui.MainActivityViewModel
@@ -47,14 +48,20 @@ class MainActivity : AppCompatActivity() {
         Log.d(TAG, "onStart: ")
 
         manager.initialize()
-        uiVm.initView()
+        uiVm.initViewData()
+
+        initRace()
 
         getExchangeRateByApi()
     }
 
+    override fun onDestroy() {
+        super.onDestroy()
+    }
+
     private fun initUiObserver() {
         uiVm.betAmountText.observe(this) {
-            Log.d(TAG, "initUiObserver: betAmountText: $it")
+            Log.d(TAG, "betAmountText: $it")
             val betAmountUSD: Double = when {
                 it.isBlank() -> 0.0
                 else -> it.toDouble()
@@ -62,6 +69,27 @@ class MainActivity : AppCompatActivity() {
             manager.usdBetAmountLiveData.postValue(betAmountUSD)
         }
 
+        uiVm.pastSecLiveData.observe(this) {
+            Log.d(TAG, "[Race] past sec: $it")
+        }
+
+        uiVm.raceProgressLiveData.observe(this) {
+            Log.d(TAG, "[Race] race progress: $it")
+            binding.pbHorse1.progress = it.race1
+            binding.pbHorse2.progress = it.race2
+            binding.pbHorse3.progress = it.race3
+            binding.pbHorse4.progress = it.race4
+
+            RaceProgress.checkWhoGoal(it)
+            if (it.goalHorseNumberList.size > 0) {
+                uiVm.stopRace()
+                Log.e(TAG, "[Race] isGoal!! ")
+                it.goalHorseNumberList.forEach { horseNumber ->
+                    Log.e(TAG, "[Race] winner is: ${horseNumber.horseName}")
+                }
+            }
+
+        }
     }
 
     private fun initManagerObserver() {
@@ -115,7 +143,7 @@ class MainActivity : AppCompatActivity() {
         binding.apply {
             btnApi.setOnClickListener {
                 Log.d(TAG, "uiAction: btnApi: onClick: ")
-                apiVm!!.queryExchangeRate()
+                apiVm?.queryExchangeRate()
             }
             btnHorse1.setOnClickListener {
                 manager.focusHorseNumberLiveData.postValue(HorseNumber.NUM_1)
@@ -131,9 +159,24 @@ class MainActivity : AppCompatActivity() {
             }
             btnBet.setOnClickListener {
                 Log.d(TAG, "uiAction: btnBet:")
-                //TODO: 下注 馬開跑
-
+                // init 賽道
+                initRace()
+                // 下注 馬開跑
+                uiVm?.startRace()
             }
+        }
+    }
+
+    private fun initRace() {
+        binding.apply {
+            pbHorse1.max = RaceProgress.GOAL
+            pbHorse2.max = RaceProgress.GOAL
+            pbHorse3.max = RaceProgress.GOAL
+            pbHorse4.max = RaceProgress.GOAL
+            pbHorse1.progress = 0
+            pbHorse2.progress = 0
+            pbHorse3.progress = 0
+            pbHorse4.progress = 0
         }
     }
 
@@ -141,6 +184,5 @@ class MainActivity : AppCompatActivity() {
         uiVm.updateExchangeRate(-1.0)
         apiVm.queryExchangeRate()
     }
-
 
 }

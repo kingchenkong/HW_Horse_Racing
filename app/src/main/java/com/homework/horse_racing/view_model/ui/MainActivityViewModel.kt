@@ -5,6 +5,8 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.homework.horse_racing.model.bean.MyTimer
+import com.homework.horse_racing.model.bean.RaceProgress
 import com.homework.horse_racing.model.manager.BetHorseManager
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
@@ -20,7 +22,7 @@ class MainActivityViewModel : ViewModel() {
         Log.d(TAG, "onCleared: ")
     }
 
-    fun initView() {
+    fun initViewData() {
         viewModelScope.launch {
             _exchangeRateText.postValue(exchangeRateToText(0.0))
             _timeText.postValue("- - -")
@@ -35,6 +37,21 @@ class MainActivityViewModel : ViewModel() {
             _awardTWDText.postValue("0")
         }
     }
+
+//    fun fetchProgress() {
+//        viewModelScope.launch {
+//            RaceEmitter.raceFlow()
+//                .onEach {
+//                    Log.d(TAG, "fetchProgress: $it")
+//                }
+//                .catch {
+//                    Log.d(TAG, "fetchProgress: $this")
+//                }
+//                .collect {
+//                    Log.d(TAG, "fetchProgress: $it")
+//                }
+//        }
+//    }
 
     private fun exchangeRateToText(exchangeRate: Double): String {
         return String.format("%.2f", exchangeRate)
@@ -142,6 +159,20 @@ class MainActivityViewModel : ViewModel() {
     // 輸入: 下注金額
     val betAmountText: MutableLiveData<String> = MutableLiveData<String>()
 
+    // Race
+    val pastSecLiveData: MutableLiveData<Int> = MutableLiveData<Int>()
+    val raceProgressLiveData: MutableLiveData<RaceProgress> = MutableLiveData<RaceProgress>()
+
     //endregion
+
+    lateinit var raceTimer: MyTimer
+    fun startRace() {
+        raceTimer = MyTimer(pastSecLiveData, raceProgressLiveData)
+        raceTimer.startTimer()
+    }
+
+    fun stopRace() {
+        raceTimer.stopTimer()
+    }
 
 }
