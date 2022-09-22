@@ -472,6 +472,7 @@
                 android:layout_marginTop="5dp"
                 android:layout_marginBottom="5dp"
                 android:layout_weight="1"
+                android:background="@drawable/progress_bar_race_bg"
                 android:progressDrawable="@drawable/progress_bar_horse_1" />
 
             <ProgressBar
@@ -482,6 +483,7 @@
                 android:layout_marginTop="5dp"
                 android:layout_marginBottom="5dp"
                 android:layout_weight="1"
+                android:background="@drawable/progress_bar_race_bg"
                 android:progressDrawable="@drawable/progress_bar_horse_2" />
 
             <ProgressBar
@@ -492,6 +494,7 @@
                 android:layout_marginTop="5dp"
                 android:layout_marginBottom="5dp"
                 android:layout_weight="1"
+                android:background="@drawable/progress_bar_race_bg"
                 android:progressDrawable="@drawable/progress_bar_horse_3" />
 
             <ProgressBar
@@ -502,6 +505,7 @@
                 android:layout_marginTop="5dp"
                 android:layout_marginBottom="5dp"
                 android:layout_weight="1"
+                android:background="@drawable/progress_bar_race_bg"
                 android:progressDrawable="@drawable/progress_bar_horse_4" />
         </LinearLayout>
 

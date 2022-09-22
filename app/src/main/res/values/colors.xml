@@ -7,10 +7,12 @@
     <color name="teal_700">#FF018786</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
-    <color name="horse_1">#FFFF0000</color>
-    <color name="horse_2">#FF00FF00</color>
-    <color name="horse_3">#FF0000FF</color>
-    <color name="horse_4">#FF888888</color>
+
+    <color name="race_bg">#667FC380</color>
+    <color name="horse_1">#FFC3807F</color>
+    <color name="horse_2">#FF469647</color>
+    <color name="horse_3">#FF807FC3</color>
+    <color name="horse_4">#FFC3A27F</color>
 
 
 </resources>
