@@ -1,5 +1,6 @@
 package com.homework.horse_racing.view
 
+import android.icu.text.SimpleDateFormat
 import android.os.Bundle
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
@@ -10,6 +11,7 @@ import com.homework.horse_racing.model.bean.RaceProgress
 import com.homework.horse_racing.model.manager.BetHorseManager
 import com.homework.horse_racing.view_model.ExchangeApiViewModel
 import com.homework.horse_racing.view_model.ui.MainActivityViewModel
+import java.util.*
 
 class MainActivity : AppCompatActivity() {
     companion object {
@@ -69,26 +71,21 @@ class MainActivity : AppCompatActivity() {
             manager.usdBetAmountLiveData.postValue(betAmountUSD)
         }
 
-        uiVm.pastSecLiveData.observe(this) {
-            Log.d(TAG, "[Race] past sec: $it")
-        }
+//        uiVm.pastSecLiveData.observe(this) {
+//            Log.d(TAG, "[Race] past sec: $it")
+//        }
 
         uiVm.raceProgressLiveData.observe(this) {
-            Log.d(TAG, "[Race] race progress: $it")
+//            Log.d(TAG, "[Race] race progress: $it")
             binding.pbHorse1.progress = it.race1
             binding.pbHorse2.progress = it.race2
             binding.pbHorse3.progress = it.race3
             binding.pbHorse4.progress = it.race4
 
-            RaceProgress.checkWhoGoal(it)
+            RaceProgress.checkWinner(it)
             if (it.goalHorseNumberList.size > 0) {
-                uiVm.stopRace()
-                Log.e(TAG, "[Race] isGoal!! ")
-                it.goalHorseNumberList.forEach { horseNumber ->
-                    Log.e(TAG, "[Race] winner is: ${horseNumber.horseName}")
-                }
+                uiVm.processAfterGoal(it)
             }
-
         }
     }
 
@@ -106,7 +103,7 @@ class MainActivity : AppCompatActivity() {
             uiVm.oddsHorse4Text.postValue(it.toString())
         }
         manager.focusHorseNumberLiveData.observe(this) {
-            Log.d(TAG, "initUiObserver: manager.focusHorseNumber: ${it.id}")
+            Log.d(TAG, "manager.focusHorseNumber: ${it.id}")
             uiVm.updateFocusNumberText(it.horseName)
 
             manager.calculateAward()
@@ -117,7 +114,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         manager.twdBetAmountLiveData.observe(this) {
-            Log.d(TAG, "initManagerObserver: twdBetAmountLiveData: $it ")
+            Log.d(TAG, "twdBetAmountLiveData: $it ")
             uiVm.updateBetAmountToTWD(it)
         }
 
@@ -126,6 +123,11 @@ class MainActivity : AppCompatActivity() {
         }
         manager.twdAwardLiveData.observe(this) {
             uiVm.updateAwardTWDText(it)
+        }
+        manager.processEndTimeStampLiveData.observe(this) {
+            val sdf = SimpleDateFormat("yyyy-MM-dd hh:mm:ss.ssS", Locale.TAIWAN)
+            Log.d(TAG, "[Race] 賽事結束時間: ${sdf.format(it)})")
+            BetHorseManager.oddsStatistics()
         }
 
     }

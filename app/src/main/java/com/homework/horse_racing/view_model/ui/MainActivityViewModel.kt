@@ -8,6 +8,7 @@ import androidx.lifecycle.viewModelScope
 import com.homework.horse_racing.model.bean.MyTimer
 import com.homework.horse_racing.model.bean.RaceProgress
 import com.homework.horse_racing.model.manager.BetHorseManager
+import com.homework.horse_racing.view.MainActivity
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
@@ -37,21 +38,6 @@ class MainActivityViewModel : ViewModel() {
             _awardTWDText.postValue("0")
         }
     }
-
-//    fun fetchProgress() {
-//        viewModelScope.launch {
-//            RaceEmitter.raceFlow()
-//                .onEach {
-//                    Log.d(TAG, "fetchProgress: $it")
-//                }
-//                .catch {
-//                    Log.d(TAG, "fetchProgress: $this")
-//                }
-//                .collect {
-//                    Log.d(TAG, "fetchProgress: $it")
-//                }
-//        }
-//    }
 
     private fun exchangeRateToText(exchangeRate: Double): String {
         return String.format("%.2f", exchangeRate)
@@ -173,6 +159,16 @@ class MainActivityViewModel : ViewModel() {
 
     fun stopRace() {
         raceTimer.stopTimer()
+    }
+
+    fun processAfterGoal(raceProgress: RaceProgress) {
+        stopRace()
+        raceProgress.goalHorseNumberList.forEach { horseNumber ->
+            Log.e(TAG, "[Race] winner is: ${horseNumber.horseName}")
+        }
+        RaceProgress.checkLoser(raceProgress)
+        // 完賽後處理
+        BetHorseManager.processAfterGoal(raceProgress)
     }
 
 }

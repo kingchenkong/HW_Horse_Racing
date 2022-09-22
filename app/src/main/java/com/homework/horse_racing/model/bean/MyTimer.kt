@@ -28,7 +28,7 @@ class MyTimer(
     }
 
     fun startTimer() {
-        timer.schedule(task, Date(), 1000)
+        timer.schedule(task, Date(), 100)
     }
 
     fun stopTimer() {
