@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import com.homework.horse_racing.model.bean.HorseNumber
 import com.homework.horse_racing.model.bean.RaceProgress
+import com.homework.horse_racing.model.bean.ResultState
 import kotlin.math.roundToInt
 
 object BetHorseManager {
@@ -45,6 +46,7 @@ object BetHorseManager {
 
     // 處理結束 timestamp
     val processEndTimeStampLiveData: MutableLiveData<Long> = MutableLiveData<Long>()
+    val resultState: MutableLiveData<ResultState> = MutableLiveData<ResultState>()
 
     fun initialize() {
         nowExchangeRateLiveData.postValue(0.0)
@@ -110,13 +112,15 @@ object BetHorseManager {
     }
 
     fun checkIsWin(raceProgress: RaceProgress): Boolean {
-        var isWin: Boolean = false
+//        var isWin: Boolean = false
         raceProgress.goalHorseNumberList.forEach {
             if (focusHorseNumberLiveData.value!! == it) {
-                isWin = true
+                resultState.postValue(ResultState.WIN)
+                return true
             }
         }
-        return isWin
+        resultState.postValue(ResultState.LOSE)
+        return false
     }
 
     // 賽後統計

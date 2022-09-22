@@ -181,12 +181,17 @@ class MainActivityViewModel : ViewModel() {
         RaceProgress.checkLoser(raceProgress)
 
         // 有贏嗎?
+        resultUIProcess(raceProgress)
+
+        // 完賽後處理
+        BetHorseManager.processAfterGoal(raceProgress)
+    }
+
+    private fun resultUIProcess(raceProgress: RaceProgress) {
         if (BetHorseManager.checkIsWin(raceProgress)) {
             val award: Int = BetHorseManager.takeAward()
             _remainAmountText.postValue(award.toString())
         }
-        // 完賽後處理
-        BetHorseManager.processAfterGoal(raceProgress)
     }
 
     private fun outputTvResult(winnerList: MutableList<HorseNumber>) {

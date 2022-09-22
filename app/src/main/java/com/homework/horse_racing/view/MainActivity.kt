@@ -10,7 +10,10 @@ import androidx.lifecycle.lifecycleScope
 import com.homework.horse_racing.databinding.ActivityMainBinding
 import com.homework.horse_racing.model.bean.HorseNumber
 import com.homework.horse_racing.model.bean.RaceProgress
+import com.homework.horse_racing.model.bean.ResultState
 import com.homework.horse_racing.model.manager.BetHorseManager
+import com.homework.horse_racing.view.alert.BetErrorAlertDialog
+import com.homework.horse_racing.view.alert.ResultAlertDialog
 import com.homework.horse_racing.view_model.ExchangeApiViewModel
 import com.homework.horse_racing.view_model.ui.MainActivityViewModel
 import java.util.*
@@ -29,7 +32,6 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        Log.d(TAG, "onCreate: ")
 
         uiVm = ViewModelProvider(this)[MainActivityViewModel::class.java]
         apiVm = ViewModelProvider(this)[ExchangeApiViewModel::class.java]
@@ -49,7 +51,6 @@ class MainActivity : AppCompatActivity() {
 
     override fun onStart() {
         super.onStart()
-        Log.d(TAG, "onStart: ")
 
         manager.initialize()
         uiVm.initViewData()
@@ -57,10 +58,6 @@ class MainActivity : AppCompatActivity() {
         initRace()
 
         getExchangeRateByApi()
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
     }
 
     private fun initUiObserver() {
@@ -78,12 +75,7 @@ class MainActivity : AppCompatActivity() {
             manager.usdBetAmountLiveData.postValue(betAmountUSD)
         }
 
-//        uiVm.pastSecLiveData.observe(this) {
-//            Log.d(TAG, "[Race] past sec: $it")
-//        }
-
         uiVm.raceProgressLiveData.observe(this) {
-//            Log.d(TAG, "[Race] race progress: $it")
             binding.pbHorse1.progress = it.race1
             binding.pbHorse2.progress = it.race2
             binding.pbHorse3.progress = it.race3
@@ -133,12 +125,22 @@ class MainActivity : AppCompatActivity() {
             val sdf = SimpleDateFormat("yyyy-MM-dd hh:mm:ss.ssS", Locale.TAIWAN)
             Log.d(TAG, "[Race] 賽事結束時間: ${sdf.format(it)})")
             BetHorseManager.oddsStatistics()
-            // TODO: 報喜?嘲諷?
+            // 報喜?嘲諷?
+            showResultDialog()
 
             // 更新獎金
             BetHorseManager.calculateAward()
             // enable all btn and input
             enableAllBtnAndInput()
+        }
+    }
+
+    private fun showResultDialog() {
+        lifecycleScope.launchWhenStarted {
+            ResultAlertDialog.showResult(
+                this@MainActivity,
+                BetHorseManager.resultState.value ?: ResultState.LOSE
+            )
         }
     }
 
@@ -179,16 +181,20 @@ class MainActivity : AppCompatActivity() {
 
                 when {
                     uiVm!!.remainAmountIsInvalid() -> {
-                        Log.e(TAG, "[Bet] btnBet: 喔ㄟ! 你沒錢啦!!")
+//                        Log.e(TAG, "[Bet] btnBet: 喔ㄟ! 你沒錢啦!!")
+                        showBetErrorDialog(BetErrorAlertDialog.ErrorType.REMAIN_AMOUNT_NOT_ENOUGH)
                     }
                     uiVm!!.betAmountIsInvalid() -> {
-                        Log.e(TAG, "[Bet] btnBet: 賭金啦! 先下注好嗎?")
+//                        Log.e(TAG, "[Bet] btnBet: 賭金啦! 先下注好嗎?")
+                        showBetErrorDialog(BetErrorAlertDialog.ErrorType.BET_AMOUNT_NOT_ENOUGH)
                     }
                     uiVm!!.diffAmountIsInvalid() -> {
-                        Log.e(TAG, "[Bet] btnBet: 肖欸heo!? 沒那個咖噌不要吃那個瀉藥 =.=凸")
+//                        Log.e(TAG, "[Bet] btnBet: 肖欸heo!? 沒那個咖噌不要吃那個瀉藥 =.=凸")
+                        showBetErrorDialog(BetErrorAlertDialog.ErrorType.DIFF_OF_AMOUNT_INVALID)
                     }
                     uiVm!!.focusNumberNotFound() -> {
-                        Log.e(TAG, "[Bet] btnBet: 馬啦! 你的馬咧?")
+//                        Log.e(TAG, "[Bet] btnBet: 馬啦! 你的馬咧?")
+                        showBetErrorDialog(BetErrorAlertDialog.ErrorType.FOCUS_NUMBER_INVALID)
                     }
                     else -> {
                         Log.d(TAG, "[Bet] btnBet: GO!")
@@ -204,6 +210,12 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
             }
+        }
+    }
+
+    private fun showBetErrorDialog(errorType: BetErrorAlertDialog.ErrorType) {
+        lifecycleScope.launchWhenStarted {
+            BetErrorAlertDialog.showError(this@MainActivity, errorType)
         }
     }
 

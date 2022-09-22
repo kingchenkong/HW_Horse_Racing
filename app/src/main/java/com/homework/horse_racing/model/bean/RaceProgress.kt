@@ -1,7 +1,5 @@
 package com.homework.horse_racing.model.bean
 
-import android.util.Log
-
 class RaceProgress(
     var race1: Int, var race2: Int, var race3: Int, var race4: Int
 ) {
@@ -16,7 +14,6 @@ class RaceProgress(
         private const val STEP_MAX: Int = 10
 
         fun addNewProgress(old: RaceProgress, new: RaceProgress) {
-//            Log.d(TAG, "[Race] addNewProgress: new: $new")
             old.race1 += new.race1
             old.race2 += new.race2
             old.race3 += new.race3
