@@ -14,10 +14,16 @@ data class HistoryEntity(
     var betAmount: Int, // 下注金額
 
     @ColumnInfo(name = "bet_horse_id")
-    var betHorseId: Int, // 投注第幾號馬
+    var betHorseId: Int, // 投注第幾號馬, id
+
+    @ColumnInfo(name = "bet_horse_number")
+    var betHorseNumber: Int, // 投注第幾號馬
 
     @ColumnInfo(name = "win_horse_id")
-    var winHorseId: Int, // 當期冠軍(哪隻馬)
+    var winHorseId: Int, // 當期冠軍(哪隻馬), id
+
+    @ColumnInfo(name = "win_horse_Number")
+    var winHorseNumber: Int, // 當期冠軍(哪隻馬), Number
 
     @ColumnInfo(name = "this_round_award")
     var thisRoundAward: Int, // 本期獎金 (如果輸了就是 0)
@@ -29,6 +35,6 @@ data class HistoryEntity(
     var visible: Boolean, // visible(是否顯示, 以此代替刪除)
 ) {
     override fun toString(): String {
-        return "HistoryEntity(id=$id, betAmount=$betAmount, betHorseId=$betHorseId, winHorseId=$winHorseId, thisRoundAward=$thisRoundAward, playerAmountRemain=$playerAmountRemain, visible=$visible)"
+        return "HistoryEntity(id=$id, betAmount=$betAmount, betHorseId=$betHorseId, betHorseNumber=$betHorseNumber, winHorseId=$winHorseId, winHorseNumber=$winHorseNumber, thisRoundAward=$thisRoundAward, playerAmountRemain=$playerAmountRemain, visible=$visible)"
     }
 }

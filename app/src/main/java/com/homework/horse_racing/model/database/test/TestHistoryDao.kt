@@ -12,11 +12,11 @@ object TestHistoryDao {
         val dao: HistoryDao = MyApp.appDatabase.getHistoryDao()
 
         Log.d(TAG, "testHistoryDao: do insert - - - - - ")
-        dao.insert(HistoryEntity(0, 0, 0, 0, 0, 0, true))
-        dao.insert(HistoryEntity(0, 1, 1, 1, 1, 1, true))
-        dao.insert(HistoryEntity(0, 2, 2, 2, 2, 2, true))
-        dao.insert(HistoryEntity(0, 3, 3, 3, 3, 3, true))
-        dao.insert(HistoryEntity(0, 4, 4, 4, 4, 4, true))
+        dao.insert(HistoryEntity(0, 0, 0, 0, 0, 0, 0, 0, true))
+        dao.insert(HistoryEntity(0, 1, 1, 1, 1, 1, 1, 1, true))
+        dao.insert(HistoryEntity(0, 2, 2, 2, 2, 2, 2, 2, true))
+        dao.insert(HistoryEntity(0, 3, 3, 3, 3, 3, 3, 3, true))
+        dao.insert(HistoryEntity(0, 4, 4, 4, 4, 4, 4, 4, true))
 
         Log.d(TAG, "testHistoryDao: do query - - - - - ")
         val list = dao.getAll()

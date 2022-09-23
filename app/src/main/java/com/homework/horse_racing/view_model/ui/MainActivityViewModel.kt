@@ -322,15 +322,24 @@ class MainActivityViewModel : ViewModel() {
             }
         }
         val horseDao: HorseDao = MyApp.appDatabase.getHorseDao()
-        val betHorseId: Int =
-            horseDao.getHorseByHorseName(BetHorseManager.focusHorseNumberLiveData.value!!.horseName)!!.id
-        val winHorseId: Int =
-            horseDao.getHorseByHorseName(raceProgress.firstRace.horseNumber.horseName)!!.id
+
+        val betHorseEntity =
+            horseDao.getHorseByHorseName(BetHorseManager.focusHorseNumberLiveData.value!!.horseName)!!
+        val betHorseId: Int = betHorseEntity.id
+        val betHorseNumber: Int = betHorseEntity.number
+
+        val winHorseEntity =
+            horseDao.getHorseByHorseName(raceProgress.firstRace.horseNumber.horseName)!!
+        val winHorseId: Int = winHorseEntity.id
+        val winHorseNumber: Int = winHorseEntity.number
+
         val entity = HistoryEntity(
             id = 0,
             betAmount = BetHorseManager.twdBetAmountLiveData.value!!,
             betHorseId = betHorseId,
+            betHorseNumber = betHorseNumber,
             winHorseId = winHorseId,
+            winHorseNumber = winHorseNumber,
             thisRoundAward = award,
             playerAmountRemain = BetHorseManager.twdRemainAmountLiveData.value!!,
             visible = true,

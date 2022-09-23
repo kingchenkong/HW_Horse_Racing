@@ -1,9 +1,12 @@
 package com.homework.horse_racing.view.activity
 
+import android.app.Activity
+import android.content.Intent
 import android.icu.text.SimpleDateFormat
 import android.os.Bundle
 import android.text.InputType
 import android.util.Log
+import android.view.inputmethod.InputMethodManager
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
@@ -179,7 +182,7 @@ class MainActivity : AppCompatActivity() {
     private fun uiAction() {
         binding.apply {
             btnApi.setOnClickListener {
-                Log.d(TAG, "uiAction: btnApi: onClick: ")
+                Log.d(TAG, "[Api] btnApi:")
                 apiVm?.queryExchangeRate()
             }
             btnHorse1.setOnClickListener {
@@ -196,27 +199,22 @@ class MainActivity : AppCompatActivity() {
             }
             btnBet.setOnClickListener {
                 Log.d(TAG, "[Bet] btnBet:")
-
+                hideKeyBoard()
                 when {
                     uiVm!!.remainAmountIsInvalid() -> {
-//                        Log.e(TAG, "[Bet] btnBet: 喔ㄟ! 你沒錢啦!!")
                         showBetErrorDialog(BetErrorAlertDialog.ErrorType.REMAIN_AMOUNT_NOT_ENOUGH)
                     }
                     uiVm!!.betAmountIsInvalid() -> {
-//                        Log.e(TAG, "[Bet] btnBet: 賭金啦! 先下注好嗎?")
                         showBetErrorDialog(BetErrorAlertDialog.ErrorType.BET_AMOUNT_NOT_ENOUGH)
                     }
                     uiVm!!.diffAmountIsInvalid() -> {
-//                        Log.e(TAG, "[Bet] btnBet: 肖欸heo!? 沒那個咖噌不要吃那個瀉藥 =.=凸")
                         showBetErrorDialog(BetErrorAlertDialog.ErrorType.DIFF_OF_AMOUNT_INVALID)
                     }
                     uiVm!!.focusNumberNotFound() -> {
-//                        Log.e(TAG, "[Bet] btnBet: 馬啦! 你的馬咧?")
                         showBetErrorDialog(BetErrorAlertDialog.ErrorType.FOCUS_NUMBER_INVALID)
                     }
                     else -> {
                         Log.d(TAG, "[Bet] btnBet: GO!")
-
                         // disable all btn, and input
                         disableAllBtnAndInput()
                         // init 賽道
@@ -228,6 +226,23 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
             }
+            btnHistory.setOnClickListener {
+                Log.d(TAG, "[History] btnHistory:")
+                intentHistory()
+            }
+        }
+    }
+
+    private fun intentHistory() {
+        lifecycleScope.launchWhenStarted {
+            startActivity(Intent(this@MainActivity, HistoryActivity::class.java))
+        }
+    }
+
+    private fun hideKeyBoard() {
+        lifecycleScope.launchWhenStarted {
+            val manager = getSystemService(Activity.INPUT_METHOD_SERVICE) as InputMethodManager
+            manager.hideSoftInputFromWindow(currentFocus!!.windowToken, 0)
         }
     }
 
