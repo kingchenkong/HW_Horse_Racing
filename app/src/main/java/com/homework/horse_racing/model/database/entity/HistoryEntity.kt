@@ -27,4 +27,8 @@ data class HistoryEntity(
 
     @ColumnInfo(name = "visible")
     var visible: Boolean, // visible(是否顯示, 以此代替刪除)
-)
+) {
+    override fun toString(): String {
+        return "HistoryEntity(id=$id, betAmount=$betAmount, betHorseId=$betHorseId, winHorseId=$winHorseId, thisRoundAward=$thisRoundAward, playerAmountRemain=$playerAmountRemain, visible=$visible)"
+    }
+}

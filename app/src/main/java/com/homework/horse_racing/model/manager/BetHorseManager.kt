@@ -31,8 +31,6 @@ object BetHorseManager {
     val horseOdds3LiveData: MutableLiveData<Double> = MutableLiveData<Double>() // INIT_ODDS + 3
     val horseOdds4LiveData: MutableLiveData<Double> = MutableLiveData<Double>() // INIT_ODDS + 2.5
 
-    val nowOddsLiveData: MutableLiveData<Double> = MutableLiveData<Double>() // 0.0
-
     // 下注哪隻馬 (號碼)
     val focusHorseNumberLiveData: MutableLiveData<HorseNumber> = MutableLiveData<HorseNumber>()
 
@@ -47,6 +45,7 @@ object BetHorseManager {
     // 處理結束 timestamp
     val processEndTimeStampLiveData: MutableLiveData<Long> = MutableLiveData<Long>()
     val resultState: MutableLiveData<ResultState> = MutableLiveData<ResultState>()
+    val raceProgressLiveData: MutableLiveData<RaceProgress> = MutableLiveData<RaceProgress>()
 
     fun initialize() {
         nowExchangeRateLiveData.postValue(0.0)
@@ -95,6 +94,8 @@ object BetHorseManager {
     fun processAfterGoal(raceProgress: RaceProgress) {
         winnerOddsProcess(raceProgress)
         loserOddsProcess(raceProgress)
+
+        raceProgressLiveData.postValue(raceProgress)
 
         // clear winner, loser list
         RaceProgress.clearList(raceProgress)

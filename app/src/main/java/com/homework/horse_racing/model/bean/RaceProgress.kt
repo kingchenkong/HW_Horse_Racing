@@ -11,7 +11,6 @@ class RaceProgress(
     val loserList: MutableList<Race> = mutableListOf()
     var firstRace: Race = Race(0, HorseNumber.NUM_CLEAR)
 
-
     companion object {
         val TAG: String = RaceProgress::class.java.simpleName
 

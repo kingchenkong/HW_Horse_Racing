@@ -90,17 +90,34 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun initManagerObserver() {
+        manager.twdRemainAmountLiveData.observe(this) {
+            lifecycleScope.launchWhenStarted {
+                uiVm.updatePlayerRemainAmount(it)
+            }
+        }
         manager.horseOdds1LiveData.observe(this) {
             uiVm.oddsHorse1Text.postValue(it.toString())
+            lifecycleScope.launchWhenStarted {
+                uiVm.updateHorseOdds(HorseNumber.NUM_1, it)
+            }
         }
         manager.horseOdds2LiveData.observe(this) {
             uiVm.oddsHorse2Text.postValue(it.toString())
+            lifecycleScope.launchWhenStarted {
+                uiVm.updateHorseOdds(HorseNumber.NUM_2, it)
+            }
         }
         manager.horseOdds3LiveData.observe(this) {
             uiVm.oddsHorse3Text.postValue(it.toString())
+            lifecycleScope.launchWhenStarted {
+                uiVm.updateHorseOdds(HorseNumber.NUM_3, it)
+            }
         }
         manager.horseOdds4LiveData.observe(this) {
             uiVm.oddsHorse4Text.postValue(it.toString())
+            lifecycleScope.launchWhenStarted {
+                uiVm.updateHorseOdds(HorseNumber.NUM_4, it)
+            }
         }
         manager.focusHorseNumberLiveData.observe(this) {
             Log.d(TAG, "manager.focusHorseNumber: ${it.id}")
@@ -123,16 +140,24 @@ class MainActivity : AppCompatActivity() {
             uiVm.updateAwardTWDText(it)
         }
         manager.processEndTimeStampLiveData.observe(this) {
-            val sdf = SimpleDateFormat("yyyy-MM-dd hh:mm:ss.ssS", Locale.TAIWAN)
-            Log.d(TAG, "[Race] 賽事結束時間: ${sdf.format(it)})")
-            BetHorseManager.oddsStatistics()
-            // 報喜?嘲諷?
-            showResultDialog()
-
-            // 更新獎金
-            BetHorseManager.calculateAward()
-            // enable all btn and input
-            enableAllBtnAndInput()
+            lifecycleScope.launchWhenStarted {
+                val sdf = SimpleDateFormat("yyyy-MM-dd hh:mm:ss.ssS", Locale.TAIWAN)
+                Log.d(TAG, "[Race] 賽事結束時間: ${sdf.format(it)})")
+                BetHorseManager.oddsStatistics()
+                // 報喜?嘲諷?
+                showResultDialog()
+                // 更新獎金
+                BetHorseManager.calculateAward()
+                // enable all btn and input
+                enableAllBtnAndInput()
+            }
+        }
+        manager.raceProgressLiveData.observe(this) {
+            lifecycleScope.launchWhenStarted {
+                Log.d(TAG, "[Db] raceProgressLiveData: ")
+                // insert history
+                uiVm.insertHistory(it)
+            }
         }
     }
 

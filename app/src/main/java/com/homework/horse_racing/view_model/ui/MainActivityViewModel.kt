@@ -184,8 +184,7 @@ class MainActivityViewModel : ViewModel() {
     fun processAfterGoal(raceProgress: RaceProgress) {
         stopRace()
 
-        outputTvResult(raceProgress.goalHorseNumberList)
-
+        outputTvResult(raceProgress)
         RaceProgress.checkNotGoalList(raceProgress)
         RaceProgress.checkLoser(raceProgress)
 
@@ -195,8 +194,6 @@ class MainActivityViewModel : ViewModel() {
         // 完賽後處理
         BetHorseManager.processAfterGoal(raceProgress)
 
-        // insert result to db
-        insertResultToDb(raceProgress)
     }
 
     private fun resultUIProcess(raceProgress: RaceProgress) {
@@ -206,37 +203,60 @@ class MainActivityViewModel : ViewModel() {
         }
     }
 
-    private fun insertResultToDb(raceProgress: RaceProgress) {
-        viewModelScope.launch {
-            updatePlayerEntity()
-            updateHorseEntity()
-            insertHistoryEntity(raceProgress)
-        }
-    }
-
-    private suspend fun updatePlayerEntity() {
+    suspend fun updatePlayerRemainAmount(remainTWD: Int) {
         val dao: PlayerDao = MyApp.appDatabase.getPlayerDao()
-        val entity: PlayerEntity = PlayerEntity(0, BetHorseManager.twdRemainAmountLiveData.value!!)
+        val entity = PlayerEntity(0, remainTWD)
         dao.update(entity)
+        Log.d(TAG, "[Db]: $entity")
     }
 
-    private suspend fun updateHorseEntity() {
+    suspend fun updateHorseOdds(horseNumber: HorseNumber, odds: Double) {
+        Log.d(TAG, "[Db]: ${horseNumber.horseName}, new odds: $odds")
         val dao: HorseDao = MyApp.appDatabase.getHorseDao()
-        val entityList: List<HorseEntity> = listOf(
-            HorseEntity(0, BetHorseManager.horseOdds1LiveData.value!!, HorseNumber.NUM_1.horseName),
-            HorseEntity(1, BetHorseManager.horseOdds2LiveData.value!!, HorseNumber.NUM_2.horseName),
-            HorseEntity(2, BetHorseManager.horseOdds3LiveData.value!!, HorseNumber.NUM_3.horseName),
-            HorseEntity(3, BetHorseManager.horseOdds4LiveData.value!!, HorseNumber.NUM_4.horseName),
-        )
-        entityList.forEach {
-            dao.update(it)
+        when (horseNumber) {
+            HorseNumber.NUM_CLEAR -> {}
+            HorseNumber.NUM_1 -> {
+                val entity: HorseEntity? = dao.getHorseByHorseName(HorseNumber.NUM_1.horseName)
+                Log.d(TAG, "[Db]: $entity")
+                if (entity == null) {
+                    dao.insert(HorseEntity(0, odds, HorseNumber.NUM_1.horseName))
+                } else {
+                    dao.update(HorseEntity(entity.id, odds, HorseNumber.NUM_1.horseName))
+                }
+            }
+            HorseNumber.NUM_2 -> {
+                val entity = dao.getHorseByHorseName(HorseNumber.NUM_2.horseName)
+                Log.d(TAG, "[Db]: $entity")
+                if (entity == null) {
+                    dao.insert(HorseEntity(0, odds, HorseNumber.NUM_2.horseName))
+                } else {
+                    dao.update(HorseEntity(entity.id, odds, HorseNumber.NUM_2.horseName))
+                }
+            }
+            HorseNumber.NUM_3 -> {
+                val entity = dao.getHorseByHorseName(HorseNumber.NUM_3.horseName)
+                Log.d(TAG, "[Db]: $entity")
+                if (entity == null) {
+                    dao.insert(HorseEntity(0, odds, HorseNumber.NUM_3.horseName))
+                } else {
+                    dao.update(HorseEntity(entity.id, odds, HorseNumber.NUM_3.horseName))
+                }
+            }
+            HorseNumber.NUM_4 -> {
+                val entity = dao.getHorseByHorseName(HorseNumber.NUM_4.horseName)
+                Log.d(TAG, "[Db]: $entity")
+                if (entity == null) {
+                    dao.insert(HorseEntity(0, odds, HorseNumber.NUM_4.horseName))
+                } else {
+                    dao.update(HorseEntity(entity.id, odds, HorseNumber.NUM_4.horseName))
+                }
+            }
         }
     }
 
-    private suspend fun insertHistoryEntity(raceProgress: RaceProgress) {
+    suspend fun insertHistory(raceProgress: RaceProgress) {
         val dao: HistoryDao = MyApp.appDatabase.getHistoryDao()
-        val resultState = BetHorseManager.resultState.value!!
-        val award: Int = when (resultState) {
+        val award: Int = when (BetHorseManager.resultState.value!!) {
             ResultState.WIN -> {
                 BetHorseManager.twdAwardLiveData.value!!
             }
@@ -244,13 +264,11 @@ class MainActivityViewModel : ViewModel() {
                 0
             }
         }
-
         val horseDao: HorseDao = MyApp.appDatabase.getHorseDao()
         val betHorseId: Int =
-            horseDao.getHorseByHorseName(BetHorseManager.focusHorseNumberLiveData.value!!.horseName).id
+            horseDao.getHorseByHorseName(BetHorseManager.focusHorseNumberLiveData.value!!.horseName)!!.id
         val winHorseId: Int =
-            horseDao.getHorseByHorseName(raceProgress.firstRace.horseNumber.horseName).id
-
+            horseDao.getHorseByHorseName(raceProgress.firstRace.horseNumber.horseName)!!.id
         val entity = HistoryEntity(
             id = 0,
             betAmount = BetHorseManager.twdBetAmountLiveData.value!!,
@@ -261,15 +279,20 @@ class MainActivityViewModel : ViewModel() {
             visible = true,
         )
         dao.insert(entity)
+        Log.d(TAG, "[Db]: $entity")
     }
 
 
-    private fun outputTvResult(winnerList: MutableList<HorseNumber>) {
+    private fun outputTvResult(
+//        winnerList: MutableList<HorseNumber>
+        raceProgress: RaceProgress
+    ) {
         val stringBuilder = StringBuilder()
-        winnerList.forEach { horseNumber ->
-            Log.e(TAG, "[Race] winner is: ${horseNumber.horseName}")
-            stringBuilder.append(horseNumber.horseName).append(" ")
-        }
+//        winnerList.forEach { horseNumber ->
+//            Log.e(TAG, "[Race] winner is: ${horseNumber.horseName}")
+//            stringBuilder.append(horseNumber.horseName).append(" ")
+//        }
+        stringBuilder.append(raceProgress.firstRace.horseNumber)
         stringBuilder.append("贏了!!")
         _resultTextLiveData.postValue(stringBuilder.toString())
     }
@@ -288,12 +311,6 @@ class MainActivityViewModel : ViewModel() {
 
     fun focusNumberNotFound(): Boolean { // 沒選馬
         return BetHorseManager.focusHorseNumberLiveData.value!! == HorseNumber.NUM_CLEAR
-    }
-
-    fun betProcessALLOK(): Boolean {
-        val invalid =
-            remainAmountIsInvalid() || betAmountIsInvalid() || diffAmountIsInvalid() || focusNumberNotFound()
-        return !invalid // is all OK
     }
 
 }

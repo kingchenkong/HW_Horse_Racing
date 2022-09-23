@@ -12,4 +12,8 @@ data class PlayerEntity(
 
     @ColumnInfo(name = "amount")
     var amount: Int, // 持有賭金
-)
+) {
+    override fun toString(): String {
+        return "PlayerEntity(id=$id, amount=$amount)"
+    }
+}
