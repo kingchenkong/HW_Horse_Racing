@@ -15,7 +15,6 @@ import com.homework.horse_racing.model.database.dao.HorseDao
 import com.homework.horse_racing.model.database.dao.PlayerDao
 import com.homework.horse_racing.model.database.entity.HistoryEntity
 import com.homework.horse_racing.model.database.entity.HorseEntity
-import com.homework.horse_racing.model.database.entity.PlayerEntity
 import com.homework.horse_racing.model.manager.BetHorseManager
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
@@ -26,41 +25,7 @@ class MainActivityViewModel : ViewModel() {
         private val TAG: String = MainActivityViewModel::class.java.simpleName
     }
 
-    override fun onCleared() {
-        super.onCleared()
-        Log.d(TAG, "onCleared: ")
-    }
-
-    fun initViewData() {
-        viewModelScope.launch {
-            _exchangeRateText.postValue(exchangeRateToText(0.0))
-            _timeText.postValue("- - -")
-            _remainAmountText.postValue(BetHorseManager.INIT_REMAIN.toString())
-            oddsHorse1Text.postValue(BetHorseManager.INIT_ODDS.toString())
-            oddsHorse2Text.postValue(BetHorseManager.INIT_ODDS.toString())
-            oddsHorse3Text.postValue(BetHorseManager.INIT_ODDS.toString())
-            oddsHorse4Text.postValue(BetHorseManager.INIT_ODDS.toString())
-            _focusNumberText.postValue("請選擇號碼")
-            _betAmountExchangeToTWDText.postValue("0")
-            _awardUSDText.postValue("0")
-            _awardTWDText.postValue("0")
-        }
-    }
-
-    private fun exchangeRateToText(exchangeRate: Double): String {
-        return String.format("%.2f", exchangeRate)
-    }
-
-    private fun parseUTCToTW(utcTimeString: String): String {
-        val pattern = "yyyy-MM-dd HH:mm:ss"
-        val utcDF = SimpleDateFormat(pattern, Locale.UK)
-        utcDF.timeZone = TimeZone.getTimeZone("UTC")
-        val twDF = SimpleDateFormat(pattern, Locale.TAIWAN)
-        twDF.timeZone = TimeZone.getDefault()
-        val date: Date = utcDF.parse(utcTimeString) ?: Date()
-
-        return twDF.format(date)
-    }
+    lateinit var raceTimer: MyTimer
 
     //region LiveData: output
     // 匯率時價: USD -> TWD
@@ -86,6 +51,9 @@ class MainActivityViewModel : ViewModel() {
     // 剩餘賭金
     private val _remainAmountText: MutableLiveData<String> = MutableLiveData<String>()
     val remainAmountText: LiveData<String> = _remainAmountText
+    fun updateRemainAmountText(text: String) {
+        _remainAmountText.postValue(text)
+    }
 
     // 賠率: 1 號馬
 //    private val _oddsHorse1Text: MutableLiveData<String> = MutableLiveData<String>()
@@ -163,7 +131,38 @@ class MainActivityViewModel : ViewModel() {
 
     //endregion
 
-    lateinit var raceTimer: MyTimer
+    fun initViewData() {
+        viewModelScope.launch {
+            _exchangeRateText.postValue(exchangeRateToText(0.0))
+            _timeText.postValue("- - -")
+            _remainAmountText.postValue("0")
+            _focusNumberText.postValue("請選擇號碼")
+            _betAmountExchangeToTWDText.postValue("0")
+            _awardUSDText.postValue("0")
+            _awardTWDText.postValue("0")
+        }
+    }
+    //region Exchange rate
+
+    private fun exchangeRateToText(exchangeRate: Double): String {
+        return String.format("%.2f", exchangeRate)
+    }
+
+    private fun parseUTCToTW(utcTimeString: String): String {
+        val pattern = "yyyy-MM-dd HH:mm:ss"
+        val utcDF = SimpleDateFormat(pattern, Locale.UK)
+        utcDF.timeZone = TimeZone.getTimeZone("UTC")
+        val twDF = SimpleDateFormat(pattern, Locale.TAIWAN)
+        twDF.timeZone = TimeZone.getDefault()
+        val date: Date = utcDF.parse(utcTimeString) ?: Date()
+
+        return twDF.format(date)
+    }
+
+    //endregion
+
+    //region timer
+
     fun startRace() {
         raceTimer = MyTimer(pastSecLiveData, raceProgressLiveData)
         raceTimer.startTimer()
@@ -173,6 +172,30 @@ class MainActivityViewModel : ViewModel() {
         raceTimer.stopTimer()
     }
 
+    //endregion
+
+    //region bet error
+
+    fun remainAmountIsInvalid(): Boolean { // 賭金 TWD <= 0
+        return BetHorseManager.twdRemainAmountLiveData.value!! <= 0
+    }
+
+    fun betAmountIsInvalid(): Boolean { // 下注金 TWD <= 0
+        return BetHorseManager.twdBetAmountLiveData.value!! <= 0
+    }
+
+    fun diffAmountIsInvalid(): Boolean { // 賭金 < 下注金
+        return BetHorseManager.twdRemainAmountLiveData.value!! < BetHorseManager.twdBetAmountLiveData.value!!
+    }
+
+    fun focusNumberNotFound(): Boolean { // 沒選馬
+        return BetHorseManager.focusHorseNumberLiveData.value!! == HorseNumber.NUM_CLEAR
+    }
+
+    //endregion
+
+    //region bet start
+
     // 扣除 賭金
     fun deductRemainAmount() {
         val newRemainAmount: Int =
@@ -181,11 +204,15 @@ class MainActivityViewModel : ViewModel() {
         _remainAmountText.postValue(newRemainAmount.toString())
     }
 
+    //endregion
+
+    //region result 結算
+
     fun processAfterGoal(raceProgress: RaceProgress) {
         stopRace()
 
         outputTvResult(raceProgress)
-        RaceProgress.checkNotGoalList(raceProgress)
+//        RaceProgress.checkNotGoalList(raceProgress)
         RaceProgress.checkLoser(raceProgress)
 
         // 有贏嗎?
@@ -196,6 +223,10 @@ class MainActivityViewModel : ViewModel() {
 
     }
 
+    private fun outputTvResult(raceProgress: RaceProgress) {
+        _resultTextLiveData.postValue("${raceProgress.firstRace.horseNumber.horseName} 贏了!!")
+    }
+
     private fun resultUIProcess(raceProgress: RaceProgress) {
         if (BetHorseManager.checkIsWin(raceProgress)) {
             val award: Int = BetHorseManager.takeAward()
@@ -203,15 +234,40 @@ class MainActivityViewModel : ViewModel() {
         }
     }
 
-    suspend fun updatePlayerRemainAmount(remainTWD: Int) {
-        val dao: PlayerDao = MyApp.appDatabase.getPlayerDao()
-        val entity = PlayerEntity(0, remainTWD)
-        dao.update(entity)
-        Log.d(TAG, "[Db]: $entity")
+    //endregion
+
+    //region Database operation
+
+    fun afterResultDBProcess(raceProgress: RaceProgress) {
+        viewModelScope.launch {
+            // update player
+            updateDBPlayerRemain(BetHorseManager.twdRemainAmountLiveData.value!!)
+
+            // update horse odds in db
+            updateDbHorseOdds()
+
+            // insert history
+            insertHistory(raceProgress)
+        }
     }
 
-    suspend fun updateHorseOdds(horseNumber: HorseNumber, odds: Double) {
-        Log.d(TAG, "[Db]: ${horseNumber.horseName}, new odds: $odds")
+    suspend fun updateDBPlayerRemain(remainTWD: Int) {
+        val dao: PlayerDao = MyApp.appDatabase.getPlayerDao()
+        val entity = dao.getAll()[0]
+        entity.amount = remainTWD
+        dao.update(entity)
+        Log.d(TAG, "[Db] updatePlayerRemainAmount: $entity")
+    }
+
+    private suspend fun updateDbHorseOdds() {
+        updateHorseOdds(HorseNumber.NUM_1, BetHorseManager.horseOdds1LiveData.value!!)
+        updateHorseOdds(HorseNumber.NUM_2, BetHorseManager.horseOdds2LiveData.value!!)
+        updateHorseOdds(HorseNumber.NUM_3, BetHorseManager.horseOdds3LiveData.value!!)
+        updateHorseOdds(HorseNumber.NUM_4, BetHorseManager.horseOdds4LiveData.value!!)
+    }
+
+    private suspend fun updateHorseOdds(horseNumber: HorseNumber, odds: Double) {
+        Log.d(TAG, "[Db] updateHorseOdds: ${horseNumber.horseName}, new odds: $odds")
         val dao: HorseDao = MyApp.appDatabase.getHorseDao()
         when (horseNumber) {
             HorseNumber.NUM_CLEAR -> {}
@@ -219,44 +275,45 @@ class MainActivityViewModel : ViewModel() {
                 val entity: HorseEntity? = dao.getHorseByHorseName(HorseNumber.NUM_1.horseName)
                 Log.d(TAG, "[Db]: $entity")
                 if (entity == null) {
-                    dao.insert(HorseEntity(0, odds, HorseNumber.NUM_1.horseName))
+                    dao.insert(HorseEntity(0, odds, 1, HorseNumber.NUM_1.horseName))
                 } else {
-                    dao.update(HorseEntity(entity.id, odds, HorseNumber.NUM_1.horseName))
+                    dao.update(HorseEntity(entity.id, odds, 1, HorseNumber.NUM_1.horseName))
                 }
             }
             HorseNumber.NUM_2 -> {
                 val entity = dao.getHorseByHorseName(HorseNumber.NUM_2.horseName)
                 Log.d(TAG, "[Db]: $entity")
                 if (entity == null) {
-                    dao.insert(HorseEntity(0, odds, HorseNumber.NUM_2.horseName))
+                    dao.insert(HorseEntity(0, odds, 2, HorseNumber.NUM_2.horseName))
                 } else {
-                    dao.update(HorseEntity(entity.id, odds, HorseNumber.NUM_2.horseName))
+                    dao.update(HorseEntity(entity.id, odds, 2, HorseNumber.NUM_2.horseName))
                 }
             }
             HorseNumber.NUM_3 -> {
                 val entity = dao.getHorseByHorseName(HorseNumber.NUM_3.horseName)
                 Log.d(TAG, "[Db]: $entity")
                 if (entity == null) {
-                    dao.insert(HorseEntity(0, odds, HorseNumber.NUM_3.horseName))
+                    dao.insert(HorseEntity(0, odds, 3, HorseNumber.NUM_3.horseName))
                 } else {
-                    dao.update(HorseEntity(entity.id, odds, HorseNumber.NUM_3.horseName))
+                    dao.update(HorseEntity(entity.id, odds, 3, HorseNumber.NUM_3.horseName))
                 }
             }
             HorseNumber.NUM_4 -> {
                 val entity = dao.getHorseByHorseName(HorseNumber.NUM_4.horseName)
                 Log.d(TAG, "[Db]: $entity")
                 if (entity == null) {
-                    dao.insert(HorseEntity(0, odds, HorseNumber.NUM_4.horseName))
+                    dao.insert(HorseEntity(0, odds, 4, HorseNumber.NUM_4.horseName))
                 } else {
-                    dao.update(HorseEntity(entity.id, odds, HorseNumber.NUM_4.horseName))
+                    dao.update(HorseEntity(entity.id, odds, 4, HorseNumber.NUM_4.horseName))
                 }
             }
         }
     }
 
     suspend fun insertHistory(raceProgress: RaceProgress) {
+        Log.d(TAG, "[DB] insertHistory: ")
         val dao: HistoryDao = MyApp.appDatabase.getHistoryDao()
-        val award: Int = when (BetHorseManager.resultState.value!!) {
+        val award: Int = when (BetHorseManager.resultStateLiveData.value!!) {
             ResultState.WIN -> {
                 BetHorseManager.twdAwardLiveData.value!!
             }
@@ -282,35 +339,11 @@ class MainActivityViewModel : ViewModel() {
         Log.d(TAG, "[Db]: $entity")
     }
 
+    //endregion
 
-    private fun outputTvResult(
-//        winnerList: MutableList<HorseNumber>
-        raceProgress: RaceProgress
-    ) {
-        val stringBuilder = StringBuilder()
-//        winnerList.forEach { horseNumber ->
-//            Log.e(TAG, "[Race] winner is: ${horseNumber.horseName}")
-//            stringBuilder.append(horseNumber.horseName).append(" ")
-//        }
-        stringBuilder.append(raceProgress.firstRace.horseNumber)
-        stringBuilder.append("贏了!!")
-        _resultTextLiveData.postValue(stringBuilder.toString())
-    }
-
-    fun remainAmountIsInvalid(): Boolean { // 賭金 TWD <= 0
-        return BetHorseManager.twdRemainAmountLiveData.value!! <= 0
-    }
-
-    fun betAmountIsInvalid(): Boolean { // 下注金 TWD <= 0
-        return BetHorseManager.twdBetAmountLiveData.value!! <= 0
-    }
-
-    fun diffAmountIsInvalid(): Boolean { // 賭金 < 下注金
-        return BetHorseManager.twdRemainAmountLiveData.value!! < BetHorseManager.twdBetAmountLiveData.value!!
-    }
-
-    fun focusNumberNotFound(): Boolean { // 沒選馬
-        return BetHorseManager.focusHorseNumberLiveData.value!! == HorseNumber.NUM_CLEAR
+    override fun onCleared() {
+        super.onCleared()
+        Log.d(TAG, "onCleared: ")
     }
 
 }

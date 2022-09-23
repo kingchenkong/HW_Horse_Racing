@@ -2,6 +2,7 @@ package com.homework.horse_racing.model.manager
 
 import android.util.Log
 import androidx.lifecycle.MutableLiveData
+import com.homework.horse_racing.application.MyApp
 import com.homework.horse_racing.model.bean.HorseNumber
 import com.homework.horse_racing.model.bean.RaceProgress
 import com.homework.horse_racing.model.bean.ResultState
@@ -44,18 +45,30 @@ object BetHorseManager {
 
     // 處理結束 timestamp
     val processEndTimeStampLiveData: MutableLiveData<Long> = MutableLiveData<Long>()
-    val resultState: MutableLiveData<ResultState> = MutableLiveData<ResultState>()
-    val raceProgressLiveData: MutableLiveData<RaceProgress> = MutableLiveData<RaceProgress>()
+    val resultStateLiveData: MutableLiveData<ResultState> = MutableLiveData<ResultState>()
+    val resultRaceProgressLiveData: MutableLiveData<RaceProgress> = MutableLiveData<RaceProgress>()
 
-    fun initialize() {
+    suspend fun initialize() {
+        val playerList = MyApp.checkPlayerExist()
+        val horseList = MyApp.checkHorseExist()
+
+        Log.d(TAG, "[db] initialize: player: $playerList")
+        Log.d(TAG, "[db] initialize: horse: $horseList")
+
+        twdRemainAmountLiveData.postValue(playerList[0].amount)
+
+        horseList.forEach {
+            when (it.number) {
+                HorseNumber.NUM_1.number -> horseOdds1LiveData.postValue(it.odds)
+                HorseNumber.NUM_2.number -> horseOdds2LiveData.postValue(it.odds)
+                HorseNumber.NUM_3.number -> horseOdds3LiveData.postValue(it.odds)
+                HorseNumber.NUM_4.number -> horseOdds4LiveData.postValue(it.odds)
+                HorseNumber.NUM_CLEAR.number -> {}
+
+            }
+        }
         nowExchangeRateLiveData.postValue(0.0)
-        twdRemainAmountLiveData.postValue(INIT_REMAIN)
         focusHorseNumberLiveData.postValue(HorseNumber.NUM_CLEAR)
-        horseOdds1LiveData.postValue(INIT_ODDS)
-        horseOdds2LiveData.postValue(INIT_ODDS)
-        horseOdds3LiveData.postValue(INIT_ODDS)
-        horseOdds4LiveData.postValue(INIT_ODDS)
-
         usdBetAmountLiveData.postValue(0.0)
         usdAwardLiveData.postValue(0.0)
         twdAwardLiveData.postValue(0)
@@ -95,7 +108,7 @@ object BetHorseManager {
         winnerOddsProcess(raceProgress)
         loserOddsProcess(raceProgress)
 
-        raceProgressLiveData.postValue(raceProgress)
+        resultRaceProgressLiveData.postValue(raceProgress)
 
         // clear winner, loser list
         RaceProgress.clearList(raceProgress)
@@ -114,18 +127,28 @@ object BetHorseManager {
 
     fun checkIsWin(raceProgress: RaceProgress): Boolean {
 //        var isWin: Boolean = false
-        raceProgress.goalHorseNumberList.forEach {
-            if (focusHorseNumberLiveData.value!! == it) {
-                resultState.postValue(ResultState.WIN)
-                return true
-            }
+//        raceProgress.goalHorseNumberList.forEach {
+//            if (focusHorseNumberLiveData.value!! == it) {
+//                resultState.postValue(ResultState.WIN)
+//                return true
+//            }
+//        }
+//        resultState.postValue(ResultState.LOSE)
+//        return false
+        val firstHorse = raceProgress.firstRace.horseNumber
+        val focusHorse = focusHorseNumberLiveData.value!!
+        Log.d(TAG, "[Race] checkIsWin: first: $firstHorse, focus: $focusHorse")
+        val isWin = firstHorse == focusHorse
+        val resultState: ResultState = when (isWin) {
+            true -> ResultState.WIN
+            false -> ResultState.LOSE
         }
-        resultState.postValue(ResultState.LOSE)
-        return false
+        resultStateLiveData.postValue(resultState)
+        return isWin
     }
 
     // 賽後統計
-    fun oddsStatistics() {
+    fun printOdds() {
         Log.d(
             TAG, "[Race] Odds, " +
                     "h1: ${horseOdds1LiveData.value}, " +
@@ -164,8 +187,8 @@ object BetHorseManager {
     }
 
     private fun loserOddsProcess(raceProgress: RaceProgress) {
-        raceProgress.notGoalHorseNumberList.forEach {
-            when (it) {
+        raceProgress.loserList.forEach {
+            when (it.horseNumber) {
                 HorseNumber.NUM_1 -> {
                     val last = horseOdds1LiveData.value!!
                     val new = checkLimit(last + ODDS_LOSS_DIFF)

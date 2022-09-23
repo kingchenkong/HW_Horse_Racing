@@ -17,6 +17,9 @@ interface HorseDao {
     @Query("SELECT * FROM horse WHERE id = :id")
     suspend fun getHorseById(id: Int): HorseEntity
 
+    @Query("SELECT * FROM horse WHERE number = :number")
+    suspend fun getHorseByNumber(number: Int): HorseEntity
+
     @Query("SELECT * FROM horse WHERE horseName = :horseName")
     suspend fun getHorseByHorseName(horseName: String): HorseEntity?
 

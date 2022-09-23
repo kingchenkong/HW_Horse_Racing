@@ -49,20 +49,20 @@ class RaceProgress(
             }
         }
 
-        fun checkNotGoalList(raceProgress: RaceProgress) {
-            if (checkNotGoal(raceProgress.race1.progress)) {
-                raceProgress.notGoalHorseNumberList.add(HorseNumber.NUM_1)
-            }
-            if (checkNotGoal(raceProgress.race2.progress)) {
-                raceProgress.notGoalHorseNumberList.add(HorseNumber.NUM_2)
-            }
-            if (checkNotGoal(raceProgress.race3.progress)) {
-                raceProgress.notGoalHorseNumberList.add(HorseNumber.NUM_3)
-            }
-            if (checkNotGoal(raceProgress.race4.progress)) {
-                raceProgress.notGoalHorseNumberList.add(HorseNumber.NUM_4)
-            }
-        }
+//        fun checkNotGoalList(raceProgress: RaceProgress) {
+//            if (checkNotGoal(raceProgress.race1.progress)) {
+//                raceProgress.notGoalHorseNumberList.add(HorseNumber.NUM_1)
+//            }
+//            if (checkNotGoal(raceProgress.race2.progress)) {
+//                raceProgress.notGoalHorseNumberList.add(HorseNumber.NUM_2)
+//            }
+//            if (checkNotGoal(raceProgress.race3.progress)) {
+//                raceProgress.notGoalHorseNumberList.add(HorseNumber.NUM_3)
+//            }
+//            if (checkNotGoal(raceProgress.race4.progress)) {
+//                raceProgress.notGoalHorseNumberList.add(HorseNumber.NUM_4)
+//            }
+//        }
 
         fun checkWinner(raceProgress: RaceProgress) {
             val raceList = listOf(
@@ -107,9 +107,9 @@ class RaceProgress(
             return progress >= GOAL
         }
 
-        private fun checkNotGoal(progress: Int): Boolean {
-            return progress < GOAL
-        }
+//        private fun checkNotGoal(progress: Int): Boolean {
+//            return progress < GOAL
+//        }
 
         fun clearList(raceProgress: RaceProgress) {
             raceProgress.goalHorseNumberList.clear()

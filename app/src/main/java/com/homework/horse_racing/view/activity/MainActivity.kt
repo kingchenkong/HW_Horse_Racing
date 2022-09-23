@@ -41,23 +41,24 @@ class MainActivity : AppCompatActivity() {
         binding.lifecycleOwner = this
         binding.uiVm = uiVm
         binding.apiVm = apiVm
-
-        initUiObserver()
-        initManagerObserver()
-        initApiObserver()
-
-        uiAction()
     }
 
     override fun onStart() {
         super.onStart()
 
-        manager.initialize()
-        uiVm.initViewData()
+        lifecycleScope.launchWhenStarted {
+            initUiObserver()
+            initManagerObserver()
+            initApiObserver()
+            uiAction()
 
-        initRace()
+            uiVm.initViewData()
+            manager.initialize()
 
-        getExchangeRateByApi()
+            initRace()
+
+            getExchangeRateByApi()
+        }
     }
 
     private fun initUiObserver() {
@@ -91,38 +92,23 @@ class MainActivity : AppCompatActivity() {
 
     private fun initManagerObserver() {
         manager.twdRemainAmountLiveData.observe(this) {
-            lifecycleScope.launchWhenStarted {
-                uiVm.updatePlayerRemainAmount(it)
-            }
+            uiVm.updateRemainAmountText(it.toString())
         }
         manager.horseOdds1LiveData.observe(this) {
             uiVm.oddsHorse1Text.postValue(it.toString())
-            lifecycleScope.launchWhenStarted {
-                uiVm.updateHorseOdds(HorseNumber.NUM_1, it)
-            }
         }
         manager.horseOdds2LiveData.observe(this) {
             uiVm.oddsHorse2Text.postValue(it.toString())
-            lifecycleScope.launchWhenStarted {
-                uiVm.updateHorseOdds(HorseNumber.NUM_2, it)
-            }
         }
         manager.horseOdds3LiveData.observe(this) {
             uiVm.oddsHorse3Text.postValue(it.toString())
-            lifecycleScope.launchWhenStarted {
-                uiVm.updateHorseOdds(HorseNumber.NUM_3, it)
-            }
         }
         manager.horseOdds4LiveData.observe(this) {
             uiVm.oddsHorse4Text.postValue(it.toString())
-            lifecycleScope.launchWhenStarted {
-                uiVm.updateHorseOdds(HorseNumber.NUM_4, it)
-            }
         }
         manager.focusHorseNumberLiveData.observe(this) {
-            Log.d(TAG, "manager.focusHorseNumber: ${it.id}")
+            Log.d(TAG, "manager.focusHorseNumber: ${it.number}, name: ${it.horseName}")
             uiVm.updateFocusNumberText(it.horseName)
-
             manager.calculateAward()
         }
         manager.usdBetAmountLiveData.observe(this) {
@@ -143,29 +129,35 @@ class MainActivity : AppCompatActivity() {
             lifecycleScope.launchWhenStarted {
                 val sdf = SimpleDateFormat("yyyy-MM-dd hh:mm:ss.ssS", Locale.TAIWAN)
                 Log.d(TAG, "[Race] 賽事結束時間: ${sdf.format(it)})")
-                BetHorseManager.oddsStatistics()
-                // 報喜?嘲諷?
-                showResultDialog()
                 // 更新獎金
                 BetHorseManager.calculateAward()
+
                 // enable all btn and input
                 enableAllBtnAndInput()
             }
         }
-        manager.raceProgressLiveData.observe(this) {
+        manager.resultRaceProgressLiveData.observe(this) {
+            Log.d(TAG, "[Race] result raceProgress: $it")
+
             lifecycleScope.launchWhenStarted {
-                Log.d(TAG, "[Db] raceProgressLiveData: ")
-                // insert history
-                uiVm.insertHistory(it)
+                uiVm.afterResultDBProcess(it)
+
+                afterResultUIProcess()
             }
         }
+    }
+
+    private fun afterResultUIProcess() {
+        BetHorseManager.printOdds()
+        // show dialog
+        showResultDialog()
     }
 
     private fun showResultDialog() {
         lifecycleScope.launchWhenStarted {
             ResultAlertDialog.showResult(
                 this@MainActivity,
-                BetHorseManager.resultState.value ?: ResultState.LOSE
+                BetHorseManager.resultStateLiveData.value ?: ResultState.LOSE
             )
         }
     }

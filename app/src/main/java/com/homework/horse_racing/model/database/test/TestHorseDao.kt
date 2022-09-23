@@ -13,11 +13,11 @@ object TestHorseDao {
         val dao: HorseDao = MyApp.appDatabase.getHorseDao()
 
         Log.d(TAG, "testHorseDao: do insert - - - - - ")
-        dao.insert(HorseEntity(0, 1.0, HorseNumber.NUM_1.horseName))
-        dao.insert(HorseEntity(0, 2.0, HorseNumber.NUM_2.horseName))
-        dao.insert(HorseEntity(0, 3.0, HorseNumber.NUM_3.horseName))
-        dao.insert(HorseEntity(0, 4.0, HorseNumber.NUM_4.horseName))
-        dao.insert(HorseEntity(0, 5.0, HorseNumber.NUM_CLEAR.horseName))
+        dao.insert(HorseEntity(0, 1.0, 1, HorseNumber.NUM_1.horseName))
+        dao.insert(HorseEntity(0, 2.0, 2, HorseNumber.NUM_2.horseName))
+        dao.insert(HorseEntity(0, 3.0, 3, HorseNumber.NUM_3.horseName))
+        dao.insert(HorseEntity(0, 4.0, 4, HorseNumber.NUM_4.horseName))
+        dao.insert(HorseEntity(0, 5.0, -1, HorseNumber.NUM_CLEAR.horseName))
 
         Log.d(TAG, "testHorseDao: do query - - - - - ")
         val list = dao.getAll()
