@@ -51,6 +51,10 @@ class HistoryActivity : AppCompatActivity() {
         binding.uiVm = uiVm
 
         initRecyclerView()
+
+        binding.btnBack.setOnClickListener {
+            finish()
+        }
     }
 
     private fun initRecyclerView() {
