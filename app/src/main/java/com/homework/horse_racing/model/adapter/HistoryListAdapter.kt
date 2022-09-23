@@ -47,8 +47,6 @@ class HistoryListAdapter(
             tvThisRoundAward.text = "本期獎金:\n ${entity.thisRoundAward}"
             tvPlayerRemount.text = "賭金餘額:\n ${entity.playerAmountRemain}"
 
-            // visible
-
             // onClick
             btnDelete.setOnClickListener {
                 itemOnCLickCallback?.onClick(position, entity, holder)

@@ -44,10 +44,6 @@ class MainActivity : AppCompatActivity() {
         binding.lifecycleOwner = this
         binding.uiVm = uiVm
         binding.apiVm = apiVm
-    }
-
-    override fun onStart() {
-        super.onStart()
 
         lifecycleScope.launchWhenStarted {
             initUiObserver()
@@ -80,6 +76,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         uiVm.raceProgressLiveData.observe(this) {
+            Log.d(TAG, "[Bet] initUiObserver: raceProgressLiveData")
             binding.pbHorse1.progress = it.race1.progress
             binding.pbHorse2.progress = it.race2.progress
             binding.pbHorse3.progress = it.race3.progress
@@ -143,6 +140,7 @@ class MainActivity : AppCompatActivity() {
             Log.d(TAG, "[Race] result raceProgress: $it")
 
             lifecycleScope.launchWhenStarted {
+
                 uiVm.afterResultDBProcess(it)
 
                 afterResultUIProcess()

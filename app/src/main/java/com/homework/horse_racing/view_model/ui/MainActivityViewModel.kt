@@ -16,6 +16,7 @@ import com.homework.horse_racing.model.database.dao.PlayerDao
 import com.homework.horse_racing.model.database.entity.HistoryEntity
 import com.homework.horse_racing.model.database.entity.HorseEntity
 import com.homework.horse_racing.model.manager.BetHorseManager
+import com.homework.horse_racing.view.activity.MainActivity
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.*
@@ -210,7 +211,6 @@ class MainActivityViewModel : ViewModel() {
 
     fun processAfterGoal(raceProgress: RaceProgress) {
         stopRace()
-
         outputTvResult(raceProgress)
 //        RaceProgress.checkNotGoalList(raceProgress)
         RaceProgress.checkLoser(raceProgress)
@@ -310,7 +310,7 @@ class MainActivityViewModel : ViewModel() {
         }
     }
 
-    suspend fun insertHistory(raceProgress: RaceProgress) {
+    private suspend fun insertHistory(raceProgress: RaceProgress) {
         Log.d(TAG, "[DB] insertHistory: ")
         val dao: HistoryDao = MyApp.appDatabase.getHistoryDao()
         val award: Int = when (BetHorseManager.resultStateLiveData.value!!) {
